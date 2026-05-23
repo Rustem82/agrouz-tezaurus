@@ -1,0 +1,631 @@
+{% extends "base.html" %}
+
+{% block title %}Qishloq xo'jaligi statistikasi - Tezaurus{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <div class="stats-header">
+        <h1>📊 Qishloq xo'jaligi statistikasi</h1>
+        <p>Terminlarning sohalar, turkumlar, tarkib, giperonim, giponim, holonim, meronim, sinonim, antonim, omonim, omonimiya manbalari va paronim statistikasi</p>
+    </div>
+
+    <!-- TABS (Vkladkalar) - ENDI 15 TA (4 QATORDA) -->
+    <div class="stats-tabs">
+        <!-- 1-QATOR -->
+        <div class="tabs-row">
+            <a href="{{ url_for('agriculture_stats', tab='general') }}" class="tab {% if active_tab == 'general' %}active{% endif %}">🌾 Barcha sohalar</a>
+            <a href="{{ url_for('agriculture_stats', tab='agriculture') }}" class="tab {% if active_tab == 'agriculture' %}active{% endif %}">🌱 Dehqonchilik</a>
+            <a href="{{ url_for('agriculture_stats', tab='gardening') }}" class="tab {% if active_tab == 'gardening' %}active{% endif %}">🍎 Bog'dorchilik</a>
+            <a href="{{ url_for('agriculture_stats', tab='livestock') }}" class="tab {% if active_tab == 'livestock' %}active{% endif %}">🐄 Chorvachilik</a>
+        </div>
+        <!-- 2-QATOR -->
+        <div class="tabs-row second-row">
+            <a href="{{ url_for('agriculture_stats', tab='wordtypes') }}" class="tab {% if active_tab == 'wordtypes' %}active{% endif %}">📚 So'z turkumlari</a>
+            <a href="{{ url_for('agriculture_stats', tab='termtypes') }}" class="tab {% if active_tab == 'termtypes' %}active{% endif %}">📝 Termin turlari</a>
+            <a href="{{ url_for('agriculture_stats', tab='hyperonyms') }}" class="tab {% if active_tab == 'hyperonyms' %}active{% endif %}">🔗 Giperonimlar</a>
+            <a href="{{ url_for('agriculture_stats', tab='hyponyms') }}" class="tab {% if active_tab == 'hyponyms' %}active{% endif %}">📎 Giponimlar</a>
+            <a href="{{ url_for('agriculture_stats', tab='holonyms') }}" class="tab {% if active_tab == 'holonyms' %}active{% endif %}">🧩 Holonimlar</a>
+        </div>
+        <!-- 3-QATOR -->
+        <div class="tabs-row third-row">
+            <a href="{{ url_for('agriculture_stats', tab='meronyms') }}" class="tab {% if active_tab == 'meronyms' %}active{% endif %}">🔧 Meronimlar</a>
+            <a href="{{ url_for('agriculture_stats', tab='synonyms') }}" class="tab {% if active_tab == 'synonyms' %}active{% endif %}">🔄 Sinonimlar</a>
+            <a href="{{ url_for('agriculture_stats', tab='antonyms') }}" class="tab {% if active_tab == 'antonyms' %}active{% endif %}">⚔️ Antonimlar</a>
+            <a href="{{ url_for('agriculture_stats', tab='homonyms') }}" class="tab {% if active_tab == 'homonyms' %}active{% endif %}">🔤 Omonimlar</a>
+            <a href="{{ url_for('agriculture_stats', tab='homonym_sources') }}" class="tab {% if active_tab == 'homonym_sources' %}active{% endif %}">📖 Omonimiya manbalari</a>
+        </div>
+        <!-- 4-QATOR -->
+        <div class="tabs-row fourth-row">
+            <a href="{{ url_for('agriculture_stats', tab='paronyms') }}" class="tab {% if active_tab == 'paronyms' %}active{% endif %}">🎤 Paronimlar</a>
+        </div>
+    </div>
+
+    <!-- Statistik xulosalar -->
+    <div class="stats-summary">
+        <div class="summary-card">
+            <span class="summary-label">Jami terminlar</span>
+            <span class="summary-value">
+                {% if active_tab == 'general' %}5 136
+                {% elif active_tab == 'agriculture' %}1 474
+                {% elif active_tab == 'gardening' %}285
+                {% elif active_tab == 'livestock' %}1 105
+                {% elif active_tab == 'homonym_sources' %}9
+                {% elif active_tab == 'paronyms' %}5 136
+                {% else %}5 136{% endif %}
+            </span>
+        </div>
+        <div class="summary-card">
+            <span class="summary-label">
+                {% if active_tab == 'general' %}Yo'nalishlar soni
+                {% elif active_tab == 'agriculture' %}Quyi tarmoqlar soni
+                {% elif active_tab == 'gardening' %}Quyi tarmoqlar soni
+                {% elif active_tab == 'livestock' %}Quyi tarmoqlar soni
+                {% elif active_tab == 'wordtypes' %}Turkumlar soni
+                {% elif active_tab == 'termtypes' %}Termin turlari soni
+                {% elif active_tab == 'hyperonyms' %}Giperonim guruhlari soni
+                {% elif active_tab == 'hyponyms' %}Giponim guruhlari soni
+                {% elif active_tab == 'holonyms' %}Holonim guruhlari soni
+                {% elif active_tab == 'meronyms' %}Meronim guruhlari soni
+                {% elif active_tab == 'synonyms' %}Ko'rsatkichlar soni
+                {% elif active_tab == 'antonyms' %}Ko'rsatkichlar soni
+                {% elif active_tab == 'homonyms' %}Ko'rsatkichlar soni
+                {% elif active_tab == 'homonym_sources' %}Omonimiya manbalari soni
+                {% else %}Ko'rsatkichlar soni{% endif %}
+            </span>
+            <span class="summary-value">
+                {% if active_tab == 'general' %}9
+                {% elif active_tab == 'agriculture' %}8
+                {% elif active_tab == 'gardening' %}7
+                {% elif active_tab == 'livestock' %}9
+                {% elif active_tab == 'wordtypes' %}9
+                {% elif active_tab == 'termtypes' %}6
+                {% elif active_tab == 'hyperonyms' %}7
+                {% elif active_tab == 'hyponyms' %}7
+                {% elif active_tab == 'holonyms' %}6
+                {% elif active_tab == 'meronyms' %}7
+                {% elif active_tab == 'synonyms' %}2
+                {% elif active_tab == 'antonyms' %}3
+                {% elif active_tab == 'homonyms' %}4
+                {% elif active_tab == 'homonym_sources' %}5
+                {% else %}4{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Jadval -->
+    <div class="stats-table-wrapper">
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>
+                        {% if active_tab == 'general' %}Soha (yo'nalish)
+                        {% elif active_tab == 'agriculture' %}Dehqonchilik quyi tarmog'i
+                        {% elif active_tab == 'gardening' %}Bog'dorchilik quyi tarmog'i
+                        {% elif active_tab == 'livestock' %}Chorvachilik quyi tarmog'i
+                        {% elif active_tab == 'wordtypes' %}So'z turkumi
+                        {% elif active_tab == 'termtypes' %}Termin turi (so'z tarkibi)
+                        {% elif active_tab == 'hyperonyms' %}Giperonim guruhi (soha)
+                        {% elif active_tab == 'hyponyms' %}Giponim guruhi (sohaviy guruh)
+                        {% elif active_tab == 'holonyms' %}Holonim guruhi (butun tushuncha)
+                        {% elif active_tab == 'meronyms' %}Meronim guruhi (qism tushuncha)
+                        {% elif active_tab == 'synonyms' %}Ko'rsatkich
+                        {% elif active_tab == 'antonyms' %}Antonim holati
+                        {% elif active_tab == 'homonyms' %}Omonimiya holati
+                        {% elif active_tab == 'homonym_sources' %}Omonimiya manbai
+                        {% else %}Paronimiya holati{% endif %}
+                    </th>
+                    <th>Terminlar soni (ta)</th>
+                    <th>Ulushi, %</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if active_tab == 'general' %}
+                    <!-- ========== 1. UMUMIY STATISTIKA (9 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🌾 O'simlikshunoslik, dehqonchilik, agronomiya</td><td class="count">1 474</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 28.7%"></div><span class="percentage-text">28.7%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🐄 Chorvachilik, zootexniya, parrandachilik</td><td class="count">1 105</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 21.5%"></div><span class="percentage-text">21.5%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🌱 Tuproqshunoslik, agrokimyo, o'g'itlash</td><td class="count">636</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 12.4%"></div><span class="percentage-text">12.4%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">💧 Suv xo'jaligi, irrigatsiya, melioratsiya</td><td class="count">469</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 9.1%"></div><span class="percentage-text">9.1%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">🦠 O'simlik va hayvon kasalliklari, himoya</td><td class="count">393</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 7.7%"></div><span class="percentage-text">7.7%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">🔧 Mexanizatsiya, texnika, texnologiya</td><td class="count">360</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 7.0%"></div><span class="percentage-text">7.0%</span></div></td></tr>
+                    <tr><td class="rank">7</td><td class="industry-name">🍎 Bog'dorchilik (meva-sabzavotchilik, rezavorchilik, uzumchilik)</td><td class="count">285</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 5.5%"></div><span class="percentage-text">5.5%</span></div></td></tr>
+                    <tr><td class="rank">8</td><td class="industry-name">💰 Agrar iqtisodiyot, boshqaruv va bozor munosabatlari</td><td class="count">209</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 4.1%"></div><span class="percentage-text">4.1%</span></div></td></tr>
+                    <tr><td class="rank">9</td><td class="industry-name">🌍 Ekologiya, biologiya va biotexnologiya</td><td class="count">205</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 4.0%"></div><span class="percentage-text">4.0%</span></div></td></tr>
+
+                {% elif active_tab == 'agriculture' %}
+                    <!-- ========== 2. DEHQONCHILIK QUYI TARMOQLARI (8 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🌾 Donchilik (gallachilik)</td><td class="count">277</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 18.8%"></div><span class="percentage-text">18.8%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🥕 Sabzavotchilik</td><td class="count">254</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 17.2%"></div><span class="percentage-text">17.2%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🍉 Polizchilik</td><td class="count">139</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 9.4%"></div><span class="percentage-text">9.4%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">🌿 Texnik ekinlar (paxta, yog'li va tolali ekinlar)</td><td class="count">301</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 20.4%"></div><span class="percentage-text">20.4%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">🌾 Em-xashak ekinlari</td><td class="count">121</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 8.2%"></div><span class="percentage-text">8.2%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">🌿 Dorivor va efir-moyli ekinlar</td><td class="count">83</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 5.6%"></div><span class="percentage-text">5.6%</span></div></td></tr>
+                    <tr><td class="rank">7</td><td class="industry-name">🌱 Urug'chilik va selektsiya</td><td class="count">103</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 7.0%"></div><span class="percentage-text">7.0%</span></div></td></tr>
+                    <tr><td class="rank">8</td><td class="industry-name">💧 Agrotexnika, sug'orish va agrotizimlar</td><td class="count">196</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 13.4%"></div><span class="percentage-text">13.4%</span></div></td></tr>
+
+                {% elif active_tab == 'gardening' %}
+                    <!-- ========== 3. BOG'DORCHILIK QUYI TARMOQLARI (7 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🍎 Urug'li mevachilik (olma, nok, behi va boshqalar)</td><td class="count">73</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 25.6%"></div><span class="percentage-text">25.6%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🍑 Danakli mevachilik (o'rik, shaftoli, olcha, gilos va boshqalar)</td><td class="count">62</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 21.7%"></div><span class="percentage-text">21.7%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🍇 Uzumchilik (vinogradarstvo)</td><td class="count">51</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 17.9%"></div><span class="percentage-text">17.9%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">🍓 Rezavor-mevachilik</td><td class="count">36</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 12.6%"></div><span class="percentage-text">12.6%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">🌰 Yong'oqmevachilik (bodom, yong'oq, pista va boshqalar)</td><td class="count">31</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 10.9%"></div><span class="percentage-text">10.9%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">🍊 Tsitrus va subtropik mevachilik</td><td class="count">17</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 6.0%"></div><span class="percentage-text">6.0%</span></div></td></tr>
+                    <tr><td class="rank">7</td><td class="industry-name">🌺 Manzarali (dekorativ) bog'dorchilik</td><td class="count">15</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 5.3%"></div><span class="percentage-text">5.3%</span></div></td></tr>
+
+                {% elif active_tab == 'livestock' %}
+                    <!-- ========== 4. CHORVACHILIK QUYI TARMOQLARI (9 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🐮 Qoramolchilik</td><td class="count">315</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 28.5%"></div><span class="percentage-text">28.5%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🐑 Qo'ychilik</td><td class="count">272</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 24.6%"></div><span class="percentage-text">24.6%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🐔 Parrandachilik</td><td class="count">185</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 16.7%"></div><span class="percentage-text">16.7%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">🐴 Yilqichilik</td><td class="count">129</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 11.7%"></div><span class="percentage-text">11.7%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">🐐 Echkichilik</td><td class="count">66</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 6.0%"></div><span class="percentage-text">6.0%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">🐷 Cho'chqachilik</td><td class="count">51</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 4.6%"></div><span class="percentage-text">4.6%</span></div></td></tr>
+                    <tr><td class="rank">7</td><td class="industry-name">🐛 Ipakchilik (pillachilik)</td><td class="count">48</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 4.3%"></div><span class="percentage-text">4.3%</span></div></td></tr>
+                    <tr><td class="rank">8</td><td class="industry-name">🐝 Asalarichilik</td><td class="count">28</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 2.5%"></div><span class="percentage-text">2.5%</span></div></td></tr>
+                    <tr><td class="rank">9</td><td class="industry-name">🐟 Baliqchilik va akvakultura</td><td class="count">11</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 1.0%"></div><span class="percentage-text">1.0%</span></div></td></tr>
+
+                {% elif active_tab == 'wordtypes' %}
+                    <!-- ========== 5. SO'Z TURKUMLARI (9 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">📚 Ot</td><td class="count">4 156</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 80.9%"></div><span class="percentage-text">80.9%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🎨 Sifat</td><td class="count">315</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 6.1%"></div><span class="percentage-text">6.1%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">⚡ Fe'l</td><td class="count">247</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 4.8%"></div><span class="percentage-text">4.8%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">🔗 Birikmali terminlar</td><td class="count">383</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 7.5%"></div><span class="percentage-text">7.5%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">🔄 Sifat/ot shaklidagi terminlar</td><td class="count">22</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.4%"></div><span class="percentage-text">0.4%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">💬 Ibora va frazeologik birliklar</td><td class="count">5</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.1%"></div><span class="percentage-text">0.1%</span></div></td></tr>
+                    <tr><td class="rank">7</td><td class="industry-name">⏱️ Ravish</td><td class="count">4</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.08%"></div><span class="percentage-text">0.08%</span></div></td></tr>
+                    <tr><td class="rank">8</td><td class="industry-name">🔧 Yordamchi birliklar</td><td class="count">2</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.04%"></div><span class="percentage-text">0.04%</span></div></td></tr>
+                    <tr><td class="rank">9</td><td class="industry-name">😲 Undov</td><td class="count">2</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.04%"></div><span class="percentage-text">0.04%</span></div></td></tr>
+
+                {% elif active_tab == 'termtypes' %}
+                    <!-- ========== 6. TERMIN TURLARI (SO'Z TARKIBI) (6 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">📖 Tub (sodda) so'zlar</td><td class="count">2 112</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 41.1%"></div><span class="percentage-text">41.1%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🔨 Yasama so'zlar (ildiz + affiks)</td><td class="count">1 305</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 25.4%"></div><span class="percentage-text">25.4%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🔗 Qo'shma so'zlar</td><td class="count">729</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 14.2%"></div><span class="percentage-text">14.2%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">📝 Birikmali terminlar (so'z birikmalari)</td><td class="count">770</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 15.0%"></div><span class="percentage-text">15.0%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">🌍 O'zlashma terminlar (lotin, grek, arab va boshqalar)</td><td class="count">200</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 3.9%"></div><span class="percentage-text">3.9%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">✂️ Qisqartma, frazeologik va boshqa birliklar</td><td class="count">20</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.4%"></div><span class="percentage-text">0.4%</span></div></td></tr>
+
+                {% elif active_tab == 'hyperonyms' %}
+                    <!-- ========== 7. GIPERONIM GURUHLARI (7 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🔬 Biologiya va ekologiya</td><td class="count">1 495</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 29.1%"></div><span class="percentage-text">29.1%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🌾 Qishloq xo'jaligi va dehqonchilik</td><td class="count">1 264</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 24.6%"></div><span class="percentage-text">24.6%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🐄 Chorvachilik va veterinariya</td><td class="count">852</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 16.6%"></div><span class="percentage-text">16.6%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">🌱 Tuproqshunoslik, irrigatsiya va melioratsiya</td><td class="count">534</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 10.4%"></div><span class="percentage-text">10.4%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">💰 Iqtisodiyot va boshqaruv</td><td class="count">447</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 8.7%"></div><span class="percentage-text">8.7%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">🔧 Texnika va texnologiya</td><td class="count">370</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 7.2%"></div><span class="percentage-text">7.2%</span></div></td></tr>
+                    <tr><td class="rank">7</td><td class="industry-name">👥 Ijtimoiy-gumanitar va huquqiy sohalar</td><td class="count">174</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 3.4%"></div><span class="percentage-text">3.4%</span></div></td></tr>
+
+                {% elif active_tab == 'hyponyms' %}
+                    <!-- ========== 8. GIPONIM GURUHLARI (7 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🌿 O'simlikshunoslik va botanika</td><td class="count">1 463</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 28.5%"></div><span class="percentage-text">28.5%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🌾 Qishloq xo'jaligi va dehqonchilik</td><td class="count">1 171</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 22.8%"></div><span class="percentage-text">22.8%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🐄 Chorvachilik va zootexniya</td><td class="count">996</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 19.4%"></div><span class="percentage-text">19.4%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">🌍 Ekologiya va tabiiy muhit</td><td class="count">632</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 12.3%"></div><span class="percentage-text">12.3%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">🏥 Veterinariya va tibbiy-biologik atamalar</td><td class="count">421</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 8.2%"></div><span class="percentage-text">8.2%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">🔧 Agrotexnika va texnologiya</td><td class="count">287</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 5.6%"></div><span class="percentage-text">5.6%</span></div></td></tr>
+                    <tr><td class="rank">7</td><td class="industry-name">📊 Iqtisodiy-tashkiliy va ijtimoiy tushunchalar</td><td class="count">166</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 3.2%"></div><span class="percentage-text">3.2%</span></div></td></tr>
+
+                {% elif active_tab == 'holonyms' %}
+    <!-- ========== 9. HOLONIM GURUHLARI (6 ta) ========== -->
+    <tr>
+        <td class="rank">1</td>
+        <td class="industry-name">🧬 Biologik tizimlar</td>
+        <td class="count">1 457</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 28.4%"></div>
+                <span class="percentage-text">28.4%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">2</td>
+        <td class="industry-name">🌍 Ekologik va tabiiy tizimlar</td>
+        <td class="count">1 032</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 20.1%"></div>
+                <span class="percentage-text">20.1%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">3</td>
+        <td class="industry-name">🌾 Qishloq xo'jaligi va agrar tizimlar</td>
+        <td class="count">1 217</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 23.7%"></div>
+                <span class="percentage-text">23.7%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">4</td>
+        <td class="industry-name">💰 Iqtisodiy va ijtimoiy tizimlar</td>
+        <td class="count">668</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 13.0%"></div>
+                <span class="percentage-text">13.0%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">5</td>
+        <td class="industry-name">🔧 Texnika, texnologiya va ishlab chiqarish tizimlari</td>
+        <td class="count">452</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 8.8%"></div>
+                <span class="percentage-text">8.8%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">6</td>
+        <td class="industry-name">📚 Ilmiy va ta'lim tizimlari</td>
+        <td class="count">310</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 6.0%"></div>
+                <span class="percentage-text">6.0%</span>
+            </div>
+        </td>
+    </tr>
+
+                {% elif active_tab == 'meronyms' %}
+    <!-- ========== 10. MERONIM GURUHLARI (7 ta) ========== -->
+    <tr>
+        <td class="rank">1</td>
+        <td class="industry-name">🧬 Biologik va anatomik qismlar (barg, poya, ildiz, organ, hujayra, to'qima, suyak, mushak va boshqalar)</td>
+        <td class="count">1 829</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 35.6%"></div>
+                <span class="percentage-text">35.6%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">2</td>
+        <td class="industry-name">🌿 O'simlik morfologiyasi va reproduktiv qismlar (gul, meva, urug', danak, po'stloq, shox, kurtak va boshqalar)</td>
+        <td class="count">1 212</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 23.6%"></div>
+                <span class="percentage-text">23.6%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">3</td>
+        <td class="industry-name">🐄 Chorvachilik va hayvon tanasi qismlari (yelin, tuyoq, qanot, tumshuq, teri, jun, ichki a'zolar)</td>
+        <td class="count">729</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 14.2%"></div>
+                <span class="percentage-text">14.2%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">4</td>
+        <td class="industry-name">🌱 Tuproq va tabiiy muhit qatlamlari (tuproq qatlami, gumus, namlik, suv qatlamlari, qum, shag'al)</td>
+        <td class="count">514</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 10.0%"></div>
+                <span class="percentage-text">10.0%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">5</td>
+        <td class="industry-name">🔧 Texnika va mexanik tizim qismlari (mexanizm, detal, val, g'ildirak, filtr, nozul, sensor)</td>
+        <td class="count">457</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 8.9%"></div>
+                <span class="percentage-text">8.9%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">6</td>
+        <td class="industry-name">⚗️ Kimyoviy va biokimyoviy tarkibiy qismlar (molekula, ion, element, gen, DNK, oqsil, ferment)</td>
+        <td class="count">282</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 5.5%"></div>
+                <span class="percentage-text">5.5%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">7</td>
+        <td class="industry-name">📊 Iqtisodiy-tashkiliy qismlar (bo'lim, band, ulush, mablag', hujjat, jarayon bosqichi)</td>
+        <td class="count">113</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 2.2%"></div>
+                <span class="percentage-text">2.2%</span>
+            </div>
+        </td>
+    </tr>
+                {% elif active_tab == 'synonyms' %}
+    <!-- ========== 11. SINONIM STATISTIKASI (2 ta) ========== -->
+    <tr>
+        <td class="rank">1</td>
+        <td class="industry-name">🔄 Sinonimi mavjud terminlar</td>
+        <td class="count">3 703</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 72.1%"></div>
+                <span class="percentage-text">72.1%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">2</td>
+        <td class="industry-name">❌ Sinonimi berilmagan terminlar</td>
+        <td class="count">1 433</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 27.9%"></div>
+                <span class="percentage-text">27.9%</span>
+            </div>
+        </td>
+    </tr>
+
+                {% elif active_tab == 'antonyms' %}
+    <!-- ========== 12. ANTONIM STATISTIKASI (3 ta) ========== -->
+    <tr>
+        <td class="rank">1</td>
+        <td class="industry-name">⚔️ Aniq antonimi mavjud (masalan: normal – buzilgan, madaniy – yovvoyi, sog'lom – kasal)</td>
+        <td class="count">1 324</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 25.8%"></div>
+                <span class="percentage-text">25.8%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">2</td>
+        <td class="industry-name">🔄 Shartli / kontekstual antonim (ma'nosi vaziyatga bog'liq)</td>
+        <td class="count">766</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 14.9%"></div>
+                <span class="percentage-text">14.9%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">3</td>
+        <td class="industry-name">❌ Antonimi berilmagan (—, yo'q)</td>
+        <td class="count">3 046</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 59.3%"></div>
+                <span class="percentage-text">59.3%</span>
+            </div>
+        </td>
+    </tr>
+
+                {% elif active_tab == 'homonyms' %}
+    <!-- ========== 13. OMONIM STATISTIKASI (4 ta) ========== -->
+    <tr>
+        <td class="rank">1</td>
+        <td class="industry-name">🔤 Aniq omonim mavjud (bir xil shakl – semantik jihatdan bog'liq bo'lmagan turli ma'nolar)</td>
+        <td class="count">9</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0.2%"></div>
+                <span class="percentage-text">0.2%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">2</td>
+        <td class="industry-name">🌐 Fanlararo omonim</td>
+        <td class="count">0</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0.0%"></div>
+                <span class="percentage-text">0.0%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">3</td>
+        <td class="industry-name">📖 Polisemiya (ko'p ma'nolilik), lekin omonim emas</td>
+        <td class="count">0</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0.0%"></div>
+                <span class="percentage-text">0.0%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">4</td>
+        <td class="industry-name">❌ Omonimi mavjud emas</td>
+        <td class="count">5 127</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 99.8%"></div>
+                <span class="percentage-text">99.8%</span>
+            </div>
+        </td>
+    </tr>
+                {% elif active_tab == 'homonym_sources' %}
+    <!-- ========== 14. OMONIMIYA MANBALARI (5 ta) ========== -->
+    <tr>
+        <td class="rank">1</td>
+        <td class="industry-name">📖 Umumiy til ma'nosi ↔ terminologik ma'no o'rtasidagi omonimiya</td>
+        <td class="count">4</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 44.4%"></div>
+                <span class="percentage-text">44.4%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">2</td>
+        <td class="industry-name">🔬 Fanlararo omonimiya (biologiya, iqtisod, texnika va boshqa sohalar)</td>
+        <td class="count">1</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 11.1%"></div>
+                <span class="percentage-text">11.1%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">3</td>
+        <td class="industry-name">🎭 Ko'chma yoki badiiy (metaforik, metonimik) ma'no asosida shakllangan omonimiya</td>
+        <td class="count">2</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 22.2%"></div>
+                <span class="percentage-text">22.2%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">4</td>
+        <td class="industry-name">🏷️ Atama va nomlar to'qnashuvi (zoonim, fitonim va boshqalar)</td>
+        <td class="count">2</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 22.2%"></div>
+                <span class="percentage-text">22.2%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">5</td>
+        <td class="industry-name">📌 Boshqa holatlar</td>
+        <td class="count">0</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0.0%"></div>
+                <span class="percentage-text">0.0%</span>
+            </div>
+        </td>
+    </tr>
+
+                {% elif active_tab == 'paronyms' %}
+    <!-- ========== 15. PARONIM STATISTIKASI (4 ta) ========== -->
+    <tr>
+        <td class="rank">1</td>
+        <td class="industry-name">🎯 Aniq paronim juftligi mavjud (ma'nosi farq qiluvchi, lekin talaffuzi yaqin mustaqil terminlar)</td>
+        <td class="count">52</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 1.0%"></div>
+                <span class="percentage-text">1.0%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">2</td>
+        <td class="industry-name">🔊 Fonetik-grafik yaqin paronimlar (imlo, talaffuz yoki transliteratsiya farqi bilan)</td>
+        <td class="count">16</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0.3%"></div>
+                <span class="percentage-text">0.3%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">3</td>
+        <td class="industry-name">🌐 Fanlararo paronimiya (turli fan sohalarida qo'llanuvchi, shaklan yaqin terminlar)</td>
+        <td class="count">4</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0.1%"></div>
+                <span class="percentage-text">0.1%</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td class="rank">4</td>
+        <td class="industry-name">❌ Paronimi mavjud emas</td>
+        <td class="count">5 064</td>
+        <td class="percentage">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 98.6%"></div>
+                <span class="percentage-text">98.6%</span>
+            </div>
+        </td>
+    </tr>
+                {% endif %}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="2"><strong>JAMI</strong></td>
+                    <td class="count"><strong>
+                        {% if active_tab == 'general' %}5 136
+                        {% elif active_tab == 'agriculture' %}1 474
+                        {% elif active_tab == 'gardening' %}285
+                        {% elif active_tab == 'livestock' %}1 105
+                        {% elif active_tab == 'homonym_sources' %}9
+                        {% else %}5 136{% endif %}
+                    </strong></td>
+                    <td class="percentage"><strong>100.0%</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Izoh -->
+    <div class="stats-note">
+        <p>📌 <strong>Izoh:</strong> Statistik ma'lumotlar qishloq xo'jaligi terminlari asosida tayyorlangan.</p>
+    </div>
+</div>
+
+<style>
+.stats-container { background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+.stats-header { text-align: center; margin-bottom: 2rem; }
+.stats-header h1 { color: #667eea; font-size: 2rem; margin-bottom: 0.5rem; }
+.stats-tabs { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; }
+.tabs-row { display: flex; justify-content: center; gap: 0.3rem; flex-wrap: wrap; }
+.tabs-row.second-row, .tabs-row.third-row, .tabs-row.fourth-row { margin-top: 0.3rem; }
+.tab { padding: 0.35rem 0.7rem; background: transparent; color: #666; text-decoration: none; border-radius: 30px; font-weight: 600; transition: all 0.3s; display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.7rem; }
+.tab:hover { background: #f0f4ff; color: #667eea; }
+.tab.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102,126,234,0.3); }
+.stats-summary { display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; }
+.summary-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 15px; text-align: center; }
+.summary-label { display: block; font-size: 0.9rem; opacity: 0.9; }
+.summary-value { display: block; font-size: 2rem; font-weight: 700; }
+.stats-table-wrapper { overflow-x: auto; }
+.stats-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+.stats-table th { background: #f8f9ff; padding: 0.6rem; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #667eea; }
+.stats-table td { padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e7eb; }
+.stats-table tr:hover { background: #f8f9ff; }
+.rank { font-weight: 600; color: #667eea; width: 35px; }
+.industry-name { font-weight: 500; }
+.count { font-weight: 600; text-align: right; width: 75px; }
+.percentage { width: 140px; }
+.progress-bar { position: relative; background: #e5e7eb; border-radius: 10px; height: 16px; overflow: hidden; }
+.progress-fill { position: absolute; left: 0; top: 0; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 10px; }
+.percentage-text { position: relative; z-index: 1; display: block; text-align: right; padding-right: 3px; line-height: 16px; font-size: 0.6rem; font-weight: 600; color: #333; }
+.total-row { background: #f0f4ff; font-weight: 600; }
+.total-row td { border-top: 2px solid #667eea; border-bottom: none; }
+.stats-note { margin-top: 1.5rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; font-size: 0.85rem; color: #78350f; }
+@media (max-width: 768px) {
+    .stats-container { padding: 1rem; }
+    .stats-summary { flex-direction: column; gap: 1rem; }
+    .tabs-row { flex-direction: column; align-items: stretch; gap: 0.3rem; }
+    .tab { text-align: center; justify-content: center; }
+    .percentage { width: 110px; }
+    .stats-table td, .stats-table th { padding: 0.25rem; font-size: 0.6rem; }
+}
+</style>
+{% endblock %}
