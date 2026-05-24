@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Kategoriyalar - Tezaurus{% endblock %}
+
+{% block content %}
+<div class="categories-page">
+    <h1>So'z kategoriyalari</h1>
+
+    <div class="categories-grid">
+        {% for category in categories %}
+        <div class="category-card">
+            <h2>
+                {% if category == "существительные" or category == "ot" %}
+                    Otlar
+                {% elif category == "прилагательные" or category == "sifat" %}
+                    Sifatlar
+                {% elif category == "глаголы" or category == "fe'l" %}
+                    Fe'llar
+                {% elif category == "наречия" or category == "ravish" %}
+                    Ravishlar
+                {% else %}
+                    {{ category|capitalize }}
+                {% endif %}
+            </h2>
+            <p>{{ category }} kategoriyasidagi barcha so'zlar</p>
+            <a href="{{ url_for('search') }}?q={{ category }}" class="category-link">Ko'rish →</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

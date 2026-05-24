@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}So'zlar ro'yxati - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-words-container">
+    <div class="admin-header">
+        <h1>📚 So'zlar ro'yxati</h1>
+        <div class="admin-actions">
+            <a href="{{ url_for('admin.add_word') }}" class="btn-primary">➕ Yangi so'z qo'shish</a>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn-secondary">← Dashboard</a>
+        </div>
+    </div>
+
+    <div class="words-table-container">
+        <table class="words-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>So'z</th>
+                    <th>Ta'rif</th>
+                    <th>Turkum</th>
+                    <th>Qo'shilgan sana</th>
+                    <th>Amallar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for word in words.items %}
+                <tr>
+                    <td>{{ word.id }}</td>
+                    <td><strong>{{ word.word }}</strong></td>
+                    <td>{{ word.definition[:100] }}{% if word.definition|length > 100 %}...{% endif %}</td>
+                    <td>
+                        {% for cat in word.categories[:2] %}
+                            <span class="category-badge">{{ cat.category }}</span>
+                        {% endfor %}
+                        {% if word.categories.count() > 2 %}
+                            <span class="category-badge more">+{{ word.categories.count() - 2 }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ word.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('admin.edit_word', word_id=word.id) }}" class="action-btn edit" title="Tahrirlash">✏️</a>
+                        <a href="{{ url_for('word_detail', word=word.word) }}" class="action-btn view" title="Ko'rish" target="_blank">👁️</a>
+                        <a href="{{ url_for('admin.delete_word', word_id=word.id) }}" 
+                           class="action-btn delete" 
+                           title="O'chirish"
+                           onclick="return confirm('Bu so\'zni o\'chirishni tasdiqlaysizmi?')">🗑️</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if words.pages > 1 %}
+    <div class="pagination">
+        {% if words.has_prev %}
+            <a href="{{ url_for('admin.words', page=words.prev_num) }}" class="page-link">←</a>
+        {% endif %}
+        
+        {% for page_num in words.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if page_num == words.page %}
+                    <span class="page-link current">{{ page_num }}</span>
+                {% else %}
+                    <a href="{{ url_for('admin.words', page=page_num) }}" class="page-link">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+                <span class="page-link dots">...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if words.has_next %}
+            <a href="{{ url_for('admin.words', page=words.next_num) }}" class="page-link">→</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.admin-words-container {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.admin-header h1 {
+    color: #667eea;
+    font-size: 2rem;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-primary {
+    padding: 0.8rem 1.5rem;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.btn-primary:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    padding: 0.8rem 1.5rem;
+    background: #e5e7eb;
+    color: #666;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+    color: #333;
+}
+
+.words-table-container {
+    overflow-x: auto;
+}
+
+.words-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.words-table th {
+    background: #f8f9ff;
+    padding: 1rem;
+    text-align: left;
+    color: #333;
+    font-weight: 600;
+    border-bottom: 2px solid #667eea;
+}
+
+.words-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    color: #666;
+}
+
+.words-table tr:hover {
+    background: #f8f9ff;
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    background: #e0e7ff;
+    color: #667eea;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-right: 0.3rem;
+}
+
+.category-badge.more {
+    background: #e5e7eb;
+    color: #666;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.action-btn.edit {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+.action-btn.edit:hover {
+    background: #0284c7;
+    color: white;
+}
+
+.action-btn.view {
+    background: #e0e7ff;
+    color: #667eea;
+}
+
+.action-btn.view:hover {
+    background: #667eea;
+    color: white;
+}
+
+.action-btn.delete {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.action-btn.delete:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #666;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.page-link:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.page-link.current {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.page-link.dots {
+    border: none;
+    color: #999;
+}
+
+@media (max-width: 768px) {
+    .admin-words-container {
+        padding: 1rem;
+    }
+    
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .admin-actions {
+        width: 100%;
+    }
+    
+    .btn-primary, .btn-secondary {
+        flex: 1;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

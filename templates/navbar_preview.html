@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navbar Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: #f0f0f5;
+    min-height: 100vh;
+    padding-top: 90px;
+  }
+
+  /* White page section to test visibility */
+  .demo-white {
+    background: white;
+    max-width: 1200px;
+    margin: 0 auto 0;
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+
+  /* ============ NAVBAR ============ */
+  .navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 0.7rem 2rem;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(180deg, rgba(10,8,30,0.72) 0%, transparent 100%);
+  }
+
+  /* Glass container */
+  .nav-inner {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 52px;
+    background: linear-gradient(135deg, rgba(30,20,70,0.97) 0%, rgba(20,15,55,0.97) 100%);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(167,139,250,0.25);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.2rem;
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(167,139,250,0.15);
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  .navbar.scrolled .nav-inner {
+    background: linear-gradient(135deg, rgba(15,10,40,0.99) 0%, rgba(10,8,30,0.99) 100%);
+  }
+
+  /* ---- LOGO ---- */
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.5);
+    transition: transform 0.3s, box-shadow 0.3s;
+    flex-shrink: 0;
+  }
+
+  .logo-icon:hover {
+    transform: rotate(-8deg) scale(1.08);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.7);
+  }
+
+  /* SVG Book Icon */
+  .logo-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: white;
+  }
+
+  .logo-wordmark {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+
+  .logo-title {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, #e2d9f3, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .logo-sub {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ---- LINKS ---- */
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    list-style: none;
+  }
+
+  .nav-link {
+    position: relative;
+    padding: 0.38rem 0.75rem;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    border-radius: 10px;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav-link::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: rgba(167,139,250,0.12);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .nav-link:hover {
+    color: rgba(255,255,255,0.9);
+  }
+
+  .nav-link:hover::before { opacity: 1; }
+
+  .nav-link.active {
+    color: white;
+    font-weight: 600;
+  }
+
+  .nav-link.active::before { opacity: 1; }
+
+  .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 2px;
+    background: #a78bfa;
+    border-radius: 2px;
+  }
+
+  /* ---- RIGHT SIDE ---- */
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  /* Search pill */
+  .nav-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-search-input {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 0.38rem 2.4rem 0.38rem 0.9rem;
+    color: rgba(255,255,255,0.85);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.78rem;
+    width: 170px;
+    transition: all 0.3s;
+    outline: none;
+  }
+
+  .nav-search-input::placeholder { color: rgba(255,255,255,0.3); }
+
+  .nav-search-input:focus {
+    width: 220px;
+    border-color: rgba(167,139,250,0.5);
+    background: rgba(255,255,255,0.1);
+    box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+  }
+
+  .nav-search-icon {
+    position: absolute;
+    right: 0.65rem;
+    color: rgba(255,255,255,0.35);
+    pointer-events: none;
+    display: flex;
+  }
+
+  .nav-search-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Suggestions */
+  .suggestions-box {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: rgba(20,18,40,0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 14px;
+    overflow: hidden;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+  }
+
+  .suggestion-item {
+    padding: 0.55rem 1rem;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .suggestion-item:hover {
+    background: rgba(167,139,250,0.15);
+    color: white;
+  }
+
+  /* Theme button */
+  .nav-theme-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .nav-theme-btn:hover {
+    background: rgba(167,139,250,0.2);
+    border-color: rgba(167,139,250,0.4);
+    color: white;
+    transform: scale(1.05);
+  }
+
+  .nav-theme-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Mobile toggle */
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .nav-toggle span {
+    width: 20px;
+    height: 2px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 2px;
+    transition: all 0.3s;
+    display: block;
+  }
+
+  /* ---- SCROLLED STATE ---- */
+  .navbar.scrolled .nav-inner {
+    background: rgba(15, 12, 41, 0.85);
+    border-color: rgba(255,255,255,0.08);
+  }
+
+  /* ---- DEMO PAGE CONTENT ---- */
+  .demo-content {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #555;
+    font-size: 0.9rem;
+  }
+
+  .demo-content h2 {
+    font-size: 2rem;
+    color: #1a1a2e;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .nav-search-wrap { display: none; }
+    .nav-toggle { display: flex; }
+
+    .nav-inner {
+      border-radius: 14px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+
+    <!-- LOGO -->
+    <a href="#" class="nav-logo">
+      <div class="logo-icon">
+        <!-- Modern book / knowledge SVG icon -->
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" fill="rgba(255,255,255,0.3)" stroke="white" stroke-width="2"/>
+          <line x1="9" y1="7" x2="15" y2="7" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="9" y1="11" x2="13" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="logo-wordmark">
+        <span class="logo-title">Tezaurus</span>
+        <span class="logo-sub">O'zbek lug'ati</span>
+      </div>
+    </a>
+
+    <!-- LINKS -->
+    <ul class="nav-links">
+      <li><a href="#" class="nav-link active">Bosh sahifa</a></li>
+      <li><a href="#" class="nav-link">Qidiruv</a></li>
+      <li><a href="#" class="nav-link">Kategoriyalar</a></li>
+      <li><a href="#" class="nav-link">Loyiha haqida</a></li>
+    </ul>
+
+    <!-- RIGHT: search + theme -->
+    <div class="nav-right">
+      <div class="nav-search-wrap">
+        <input type="text" class="nav-search-input" id="searchInput" placeholder="Qidirish..." autocomplete="off">
+        <span class="nav-search-icon">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+        </span>
+        <div class="suggestions-box" id="suggestionsBox"></div>
+      </div>
+
+      <!-- Theme / settings icon -->
+      <button class="nav-theme-btn" id="themeBtn" title="Sozlamalar">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+          <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+        </svg>
+      </button>
+
+      <!-- Mobile toggle -->
+      <div class="nav-toggle" id="navToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+<div class="demo-white">
+  <div class="demo-content">
+    <h2>✨ Yangi navbar ko'rinishi</h2>
+    <p>Har qanday fonda ko'rinadigan to'q navbar · SVG kitob ikonkasi · Gradient logotip · Hover animatsiyalar</p>
+  </div>
+</div>
+
+<script>
+  // Scroll effect
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Mobile toggle
+  document.getElementById('navToggle').addEventListener('click', function() {
+    const links = document.querySelector('.nav-links');
+    if (links) links.style.display = links.style.display === 'flex' ? 'none' : 'flex';
+  });
+</script>
+</body>
+</html>

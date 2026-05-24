@@ -1,0 +1,555 @@
+{% extends "base.html" %}
+
+{% block title %}Kategoriyalarni boshqarish - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-categories-container">
+    <div class="admin-header">
+        <h1>🏷️ Kategoriyalarni boshqarish</h1>
+        <div class="admin-actions">
+            <button class="btn-primary" onclick="showAddCategoryModal()">➕ Yangi kategoriya qo'shish</button>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn-secondary">← Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Kategoriyalar statistikasi -->
+    <div class="categories-stats">
+        <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-info">
+                <h3>Jami kategoriyalar</h3>
+                <p class="stat-number">{{ categories|length }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-info">
+                <h3>So'zlar bilan</h3>
+                <p class="stat-number">{{ categories_with_words }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kategoriyalar ro'yxati -->
+    <div class="categories-list">
+        <h2>Barcha kategoriyalar</h2>
+        
+        {% if categories %}
+        <div class="categories-grid">
+            {% for category in categories %}
+            <div class="category-item" data-category="{{ category }}">
+                <div class="category-header">
+                    <h3>
+                        {% if category == "ot" %}
+                            🏠 Ot
+                        {% elif category == "sifat" %}
+                            🎨 Sifat
+                        {% elif category == "fe'l" %}
+                            ⚡ Fe'l
+                        {% elif category == "ravish" %}
+                            ⏱️ Ravish
+                        {% elif category == "olmosh" %}
+                            👤 Olmosh
+                        {% elif category == "son" %}
+                            🔢 Son
+                        {% elif category == "undov" %}
+                            😲 Undov
+                        {% elif category == "taqlid" %}
+                            🔊 Taqlid
+                        {% elif category == "ko'makchi" %}
+                            🔗 Ko'makchi
+                        {% elif category == "bog'lovchi" %}
+                            🔌 Bog'lovchi
+                        {% elif category == "yuklama" %}
+                            📌 Yuklama
+                        {% else %}
+                            📁 {{ category|capitalize }}
+                        {% endif %}
+                    </h3>
+                    <span class="category-badge">{{ category }}</span>
+                </div>
+                
+                <div class="category-stats">
+                    {% set word_count = category_words_count.get(category, 0) %}
+                    <p><strong>{{ word_count }}</strong> ta so'z</p>
+                </div>
+                
+                <div class="category-actions">
+                    <a href="{{ url_for('search') }}?q={{ category }}" class="action-btn view" target="_blank" title="So'zlarni ko'rish">👁️ Ko'rish</a>
+                    <a href="{{ url_for('admin.edit_category', category=category) }}" class="action-btn edit" title="Tahrirlash">✏️ Tahrirlash</a>
+                    {% if word_count == 0 %}
+                    <button class="action-btn delete" onclick="deleteCategory('{{ category }}')" title="O'chirish">🗑️ O'chirish</button>
+                    {% else %}
+                    <span class="action-btn disabled" title="Bu kategoriyada so'zlar bor">🚫 O'chirib bo'lmaydi</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏷️</div>
+            <h3>Hali kategoriyalar mavjud emas</h3>
+            <p>Yangi kategoriya qo'shish uchun tugmani bosing</p>
+            <button class="btn-primary" onclick="showAddCategoryModal()">➕ Yangi kategoriya qo'shish</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Modal: Yangi kategoriya qo'shish -->
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ Yangi kategoriya qo'shish</h2>
+                <button class="close-btn" onclick="hideAddCategoryModal()">&times;</button>
+            </div>
+            <form id="addCategoryForm" method="POST" action="{{ url_for('admin.add_category') }}">
+                <div class="form-group">
+                    <label for="category_name">Kategoriya nomi <span class="required">*</span></label>
+                    <input type="text" id="category_name" name="category_name" class="form-control" 
+                           placeholder="Masalan: ot, sifat, fe'l" required>
+                    <small class="form-text">Kategoriya nomini lotin harflarida kiriting</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="display_name">Ko'rinishdagi nomi (ixtiyoriy)</label>
+                    <input type="text" id="display_name" name="display_name" class="form-control" 
+                           placeholder="Masalan: Otlar">
+                    <small class="form-text">Agar kiritilmasa, kategoriya nomi ishlatiladi</small>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Qo'shish</button>
+                    <button type="button" class="btn-secondary" onclick="hideAddCategoryModal()">Bekor qilish</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Kategoriyani tahrirlash (AJAX) -->
+    <div id="editCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Kategoriyani tahrirlash</h2>
+                <button class="close-btn" onclick="hideEditCategoryModal()">&times;</button>
+            </div>
+            <form id="editCategoryForm" method="POST" action="{{ url_for('admin.edit_category_ajax') }}">
+                <input type="hidden" id="edit_old_name" name="old_name">
+
+                <div class="form-group">
+                    <label for="edit_category_name">Kategoriya nomi <span class="required">*</span></label>
+                    <input type="text" id="edit_category_name" name="category_name" class="form-control" required>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Saqlash</button>
+                    <button type="button" class="btn-secondary" onclick="hideEditCategoryModal()">Bekor qilish</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-categories-container {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.admin-header h1 {
+    color: #667eea;
+    font-size: 2rem;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-primary {
+    padding: 0.8rem 1.5rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    padding: 0.8rem 1.5rem;
+    background: #e5e7eb;
+    color: #666;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+    color: #333;
+}
+
+/* Statistics */
+.categories-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-info h3 {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 0.3rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Categories Grid */
+.categories-list h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.category-item {
+    background: #f8f9ff;
+    border: 2px solid #e5e7eb;
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+}
+
+.category-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.category-header h3 {
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.category-badge {
+    background: #667eea;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.category-stats {
+    margin-bottom: 1.2rem;
+    color: #666;
+}
+
+.category-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.action-btn.view {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+.action-btn.view:hover {
+    background: #0284c7;
+    color: white;
+}
+
+.action-btn.edit {
+    background: #e0e7ff;
+    color: #667eea;
+}
+
+.action-btn.edit:hover {
+    background: #667eea;
+    color: white;
+}
+
+.action-btn.delete {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.action-btn.delete:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.action-btn.disabled {
+    background: #e5e7eb;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #f8f9ff;
+    border-radius: 15px;
+    border: 2px dashed #e5e7eb;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.3s;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+/* Form */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.required {
+    color: #e53e3e;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-text {
+    display: block;
+    margin-top: 0.3rem;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .admin-categories-container {
+        padding: 1rem;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-actions {
+        width: 100%;
+    }
+
+    .btn-primary, .btn-secondary {
+        flex: 1;
+        text-align: center;
+    }
+
+    .categories-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+    }
+}
+</style>
+
+<script>
+// Add Category Modal
+function showAddCategoryModal() {
+    document.getElementById('addCategoryModal').classList.add('show');
+}
+
+function hideAddCategoryModal() {
+    document.getElementById('addCategoryModal').classList.remove('show');
+    document.getElementById('addCategoryForm').reset();
+}
+
+// Edit Category Modal
+function editCategory(category) {
+    document.getElementById('edit_old_name').value = category;
+    document.getElementById('edit_category_name').value = category;
+    document.getElementById('editCategoryModal').classList.add('show');
+}
+
+function hideEditCategoryModal() {
+    document.getElementById('editCategoryModal').classList.remove('show');
+    document.getElementById('editCategoryForm').reset();
+}
+
+// Delete Category
+function deleteCategory(category) {
+    if (confirm(`"${category}" kategoriyasini o'chirishni tasdiqlaysizmi?`)) {
+        window.location.href = `/admin/categories/delete/${encodeURIComponent(category)}`;
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const addModal = document.getElementById('addCategoryModal');
+    const editModal = document.getElementById('editCategoryModal');
+    
+    if (event.target === addModal) {
+        hideAddCategoryModal();
+    }
+    if (event.target === editModal) {
+        hideEditCategoryModal();
+    }
+}
+</script>
+{% endblock %}

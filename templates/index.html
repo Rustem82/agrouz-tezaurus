@@ -1,0 +1,742 @@
+{% extends "base.html" %}
+
+{% block title %}Bosh sahifa - Tezaurus{% endblock %}
+
+{% block content %}
+<div class="hero-section" id="heroSection">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1>QISHLOQ XO‘JALIGI TERMINLARI TEZAURUSI</h1>
+        <p>Sinonimlar, antonimlar va o'zaro bog'liq so'zlarning zamonaviy lug'ati</p>
+        <div class="hero-search">
+            <form action="{{ url_for('search') }}" method="GET">
+                <input type="text" name="q" placeholder="So'zni kiriting..." class="hero-search-input" id="heroSearchInput">
+                <button type="submit" class="hero-search-btn">Qidirish</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="features-section">
+    <h2>Imkoniyatlarimiz</h2>
+    <div class="features-grid">
+        <div class="feature-card" onclick="window.location.href='{{ url_for('search') }}'" style="cursor: pointer;">
+            <div class="feature-icon">🔍</div>
+            <h3>Aqlli qidiruv</h3>
+            <p>So'zlar bo'yicha tezkor qidiruv va avtomatik to'ldirish</p>
+            <div class="feature-hover-info">
+                <span>So'z qidirish →</span>
+            </div>
+        </div>
+
+        <div class="feature-card" onclick="window.location.href='{{ url_for('categories') }}'" style="cursor: pointer;">
+            <div class="feature-icon">📊</div>
+            <h3>Boy ma'lumotlar bazasi</h3>
+            <p>Sinonim va antonimlar bilan minglab so'zlar</p>
+            <div class="feature-hover-info">
+                <span>Kategoriyalarni ko'rish →</span>
+            </div>
+        </div>
+
+        <div class="feature-card" onclick="showRandomWord()" style="cursor: pointer;">
+            <div class="feature-icon">🎯</div>
+            <h3>Aniq ta'riflar</h3>
+            <p>Har bir so'z uchun batafsil tushuntirishlar</p>
+            <div class="feature-hover-info">
+                <span>Tasodifiy so'z →</span>
+            </div>
+        </div>
+
+        <div class="feature-card" onclick="window.location.href='{{ url_for('categories') }}'" style="cursor: pointer;">
+            <div class="feature-icon">⚡</div>
+            <h3>Tezkor kirish</h3>
+            <p>Kategoriyalar bo'yicha qulay navigatsiya</p>
+            <div class="feature-hover-info">
+                <span>Kategoriyalar →</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="popular-section">
+    <h2>Ommabop so'zlar</h2>
+    <div class="popular-grid">
+        {% for word in popular_words %}
+        <a href="{{ url_for('word_detail', word=word) }}" class="popular-card">
+            <h3>{{ word }}</h3>
+            <p>Batafsil ma'lumot →</p>
+            <span class="popular-link">Ko'rish</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal for random word -->
+<div id="randomWordModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🎲 Tasodifiy so'z</h2>
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body" id="randomWordContent">
+            <div class="loading">Yuklanmoqda...</div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Hero Section with Background Image */
+.hero-section {
+    position: relative;
+    text-align: center;
+    padding: 6rem 2rem;
+    border-radius: var(--radius);
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-image 1.5s ease-in-out;
+    background-color: #667eea; /* Цвет фона пока грузится изображение */
+}
+
+/* Убираем мигание при смене фона */
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    filter: blur(0);
+    transition: opacity 1.5s ease-in-out;
+    z-index: 0;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Более прозрачный оверлей - фото будет ярче */
+    background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.2) 100%);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    color: white;
+    max-width: 800px;
+    padding: 2rem;
+    animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero-content h1 {
+    font-family: var(--font-display);
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: white;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.95);
+    margin-bottom: 2.5rem;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+}
+
+.hero-search {
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.hero-search form {
+    display: flex;
+    gap: 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.hero-search-input {
+    flex: 1;
+    padding: 1.2rem 1.5rem;
+    border: none;
+    border-radius: var(--radius) 0 0 var(--radius);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    background: rgba(255,255,255,0.95);
+    color: #333;
+    transition: all 0.3s;
+}
+
+.hero-search-input:focus {
+    outline: none;
+    background: white;
+    box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.hero-search-btn {
+    padding: 1.2rem 2.5rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.hero-search-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.02);
+}
+
+.features-section {
+    padding: 3rem 0;
+}
+
+.features-section h2 {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+.feature-card {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: var(--radius);
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover::before {
+    transform: translateX(0);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.2);
+}
+
+.feature-card h3 {
+    margin-bottom: 0.5rem;
+    color: var(--primary);
+    font-family: var(--font-display);
+}
+
+.feature-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.feature-hover-info {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.feature-card:hover .feature-hover-info {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.popular-section {
+    padding: 3rem 0;
+}
+
+.popular-section h2 {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.popular-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.popular-card {
+    background: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    border: 1px solid var(--border);
+    display: block;
+}
+
+.popular-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-light);
+}
+
+.popular-card h3 {
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+}
+
+.popular-card p {
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+    font-size: 0.9rem;
+}
+
+.popular-link {
+    display: inline-block;
+    padding: 0.3rem 1rem;
+    background: var(--primary);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    transition: background 0.3s;
+}
+
+.popular-card:hover .popular-link {
+    background: var(--primary-dark);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.modal-header h2 {
+    color: #667eea;
+    font-size: 1.5rem;
+}
+
+.close-btn {
+    font-size: 2rem;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.3s;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.modal-body {
+    color: #333;
+}
+
+.random-word-detail {
+    text-align: center;
+}
+
+.random-word-title {
+    font-size: 2.5rem;
+    color: #667eea;
+    margin-bottom: 1rem;
+    font-family: 'Playfair Display', serif;
+}
+
+.random-word-definition {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #666;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #f8f9ff;
+    border-radius: 10px;
+}
+
+.random-word-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.category-tag {
+    padding: 0.3rem 1rem;
+    background: #e0e7ff;
+    color: #667eea;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.random-word-link {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 30px;
+    transition: all 0.3s;
+}
+
+.random-word-link:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
+}
+
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    color: #e53e3e;
+}
+
+/* Search suggestions for hero */
+.suggestions-container {
+    position: relative;
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.hero-search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0 0 10px 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.hero-search-suggestions.show {
+    display: block;
+}
+
+.suggestion-item {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #333;
+}
+
+.suggestion-item:hover {
+    background: #f0f4ff;
+    color: #667eea;
+    padding-left: 1.5rem;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 400px;
+        padding: 3rem 1rem;
+    }
+
+    .hero-content h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero-content p {
+        font-size: 1rem;
+    }
+
+    .hero-search form {
+        flex-direction: column;
+    }
+
+    .hero-search-input {
+        border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .hero-search-btn {
+        border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .popular-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .popular-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Массив с фоновыми изображениями
+const backgrounds = [
+    '{{ url_for('static', filename='images/agro.jpg') }}',
+    '{{ url_for('static', filename='images/agro1.jpg') }}',
+    '{{ url_for('static', filename='images/agro2.jpg') }}'
+];
+
+let currentBg = 0;
+let preloadedImages = [];
+let isChanging = false;
+
+// Функция для предзагрузки изображений
+function preloadImages() {
+    backgrounds.forEach((src, index) => {
+        const img = new Image();
+        img.src = src;
+        preloadedImages[index] = img;
+    });
+}
+
+// Функция для смены фона без мигания
+function changeBackground() {
+    if (isChanging) return;
+    isChanging = true;
+
+    const heroSection = document.getElementById('heroSection');
+    if (!heroSection || backgrounds.length === 0) return;
+
+    // Плавно меняем фон
+    heroSection.style.opacity = '0.7';
+
+    setTimeout(() => {
+        if (preloadedImages[currentBg] && preloadedImages[currentBg].complete) {
+            heroSection.style.backgroundImage = `url('${backgrounds[currentBg]}')`;
+        } else {
+            // Если изображение не загрузилось, используем градиент
+            heroSection.style.backgroundImage = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }
+
+        heroSection.style.opacity = '1';
+        isChanging = false;
+    }, 300);
+}
+
+// Предзагружаем все изображения при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    preloadImages();
+
+    // Устанавливаем первый фон с небольшой задержкой
+    setTimeout(() => {
+        changeBackground();
+    }, 100);
+
+    // Запускаем слайдшоу (меняем фон каждые 7 секунд)
+    setInterval(() => {
+        currentBg = (currentBg + 1) % backgrounds.length;
+        changeBackground();
+    }, 7000);
+});
+
+// Function to show random word modal
+function showRandomWord() {
+    const modal = document.getElementById('randomWordModal');
+    const content = document.getElementById('randomWordContent');
+
+    modal.classList.add('show');
+    content.innerHTML = '<div class="loading">Yuklanmoqda...</div>';
+
+    // Fetch random word from API
+    fetch('/api/random-word')
+        .then(response => response.json())
+        .then(data => {
+            if (data.word) {
+                content.innerHTML = `
+                    <div class="random-word-detail">
+                        <h3 class="random-word-title">${data.word}</h3>
+                        <div class="random-word-definition">${data.definition || 'Ta\'rif mavjud emas'}</div>
+                        <div class="random-word-categories">
+                            ${data.categories ? data.categories.map(cat =>
+                                `<span class="category-tag">${cat}</span>`
+                            ).join('') : ''}
+                        </div>
+                        <a href="/word/${encodeURIComponent(data.word)}" class="random-word-link">
+                            Batafsil ko'rish →
+                        </a>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = '<div class="error-message">So\'z topilmadi</div>';
+            }
+        })
+        .catch(error => {
+            content.innerHTML = '<div class="error-message">Xatolik yuz berdi</div>';
+        });
+}
+
+function closeModal() {
+    document.getElementById('randomWordModal').classList.remove('show');
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('randomWordModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+
+// Live search suggestions for hero
+const heroSearchInput = document.getElementById('heroSearchInput');
+if (heroSearchInput) {
+    const suggestionsContainer = document.createElement('div');
+    suggestionsContainer.className = 'hero-search-suggestions';
+    heroSearchInput.parentNode.appendChild(suggestionsContainer);
+
+    heroSearchInput.addEventListener('input', function() {
+        const query = this.value;
+        if (query.length < 2) {
+            suggestionsContainer.classList.remove('show');
+            return;
+        }
+
+        fetch(`/api/search?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(suggestions => {
+                if (suggestions.length > 0) {
+                    suggestionsContainer.innerHTML = suggestions
+                        .map(word => `<div class="suggestion-item" onclick="window.location.href='/word/${encodeURIComponent(word)}'">${word}</div>`)
+                        .join('');
+                    suggestionsContainer.classList.add('show');
+                } else {
+                    suggestionsContainer.classList.remove('show');
+                }
+            });
+    });
+
+    document.addEventListener('click', function(event) {
+        if (!heroSearchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+            suggestionsContainer.classList.remove('show');
+        }
+    });
+}
+</script>
+{% endblock %}

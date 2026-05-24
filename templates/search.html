@@ -1,0 +1,932 @@
+{% extends "base.html" %}
+
+{% block title %}Qidiruv - Tezaurus{% endblock %}
+
+{% block content %}
+<div class="search-page">
+    <div class="search-header">
+        <h1>So'zlarni qidirish</h1>
+        <form action="{{ url_for('search') }}" method="GET" class="search-form-large">
+            <div class="search-wrapper">
+                <input type="text" name="q" value="{{ query }}" placeholder="So'zni kiriting (masalan: tuproq)..." class="search-input-large" id="mainSearchInput" autofocus>
+                <button type="submit" class="search-button-large">Qidirish</button>
+            </div>
+        </form>
+    </div>
+
+    {% if query %}
+    <div class="search-results">
+        <h2>"{{ query }}" bo'yicha natijalar</h2>
+
+        {% if results %}
+        <div class="results-with-network">
+            <!-- Левая колонка: результаты поиска -->
+            <div class="results-list-container">
+                <div class="results-header">
+                    <h3>📋 Qidiruv natijalari</h3>
+                    <span class="results-count">{{ results|length }} ta so'z</span>
+                </div>
+                <div class="results-list" id="searchResultsList">
+                    {% for result in results %}
+                    <div class="result-item {% if loop.first %}active{% endif %}" data-word="{{ result.word }}" id="result-{{ result.word|replace(' ', '-') }}">
+                        <a href="{{ url_for('word_detail', word=result.word) }}" class="result-link">
+                            <div class="result-header">
+                                <h3>{{ result.word }}</h3>
+                                {% if result.turkum %}
+                                    <span class="result-badge">{{ result.turkum }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="result-definition">{{ result.definition }}</p>
+                            {% if result.sinonimlar %}
+                                <div class="result-synonyms">
+                                    <small>Sinonimlar: {{ result.sinonimlar|join(', ') }}</small>
+                                </div>
+                            {% endif %}
+                        </a>
+                        <!-- Кнопка для показа семантической сети -->
+                        <button class="semantic-btn" onclick="showSemanticNetwork('{{ result.word }}')">
+                            <span class="semantic-icon">🕸️</span>
+                            Semantik tarmoq
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Правая колонка: семантическая паутина -->
+            <div class="semantic-network-container">
+                <div class="semantic-header">
+                    <h3>🕸️ Semantik tarmoq</h3>
+                    <p id="currentNetworkWord">Hozir: <span id="currentWordDisplay">{{ results[0].word if results else 'Tanlanmagan' }}</span></p>
+                </div>
+                <div id="semanticNetwork" class="semantic-network">
+                    <div class="network-placeholder">
+                        <div class="placeholder-icon">🕸️</div>
+                        <p>Semantik tarmoq yuklanmoqda...</p>
+                    </div>
+                </div>
+
+                <!-- Расширенная легенда -->
+                <div class="semantic-legend">
+                    <div class="legend-item">
+                        <span class="legend-color synonym-color"></span>
+                        <span class="legend-label">🔄 Sinonim</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color antonym-color"></span>
+                        <span class="legend-label">⚔️ Antonim</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color hyperonym-color"></span>
+                        <span class="legend-label">⬆️ Giperonim</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color hyponym-color"></span>
+                        <span class="legend-label">⬇️ Giponim</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color holonym-color"></span>
+                        <span class="legend-label">🔗 Holonim</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color meronym-color"></span>
+                        <span class="legend-label">🧩 Meronim</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color homonym-color"></span>
+                        <span class="legend-label">🔤 Omonim</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color paronym-color"></span>
+                        <span class="legend-label">🎤 Paronim</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color usage-color"></span>
+                        <span class="legend-label">🏷️ Qo'llanilish</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="no-results">
+            <p>Sizning so'rovingiz bo'yicha hech narsa topilmadi.</p>
+            <p>So'rovingizni o'zgartirib yoki boshqa so'z qidirib ko'ring.</p>
+            <div class="search-suggestions">
+                <h3>Mumkin bo'lgan so'zlar:</h3>
+                <div class="suggestion-links">
+                    <a href="{{ url_for('search') }}?q=tuproq">tuproq</a>
+                    <a href="{{ url_for('search') }}?q=uy">uy</a>
+                    <a href="{{ url_for('search') }}?q=quvonch">quvonch</a>
+                    <a href="{{ url_for('search') }}?q=tez">tez</a>
+                    <a href="{{ url_for('search') }}?q=chiroyli">chiroyli</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- D3.js библиотека для визуализации -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+.search-page {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.search-header h1 {
+    color: var(--primary);
+    margin-bottom: 2rem;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+}
+
+.search-form-large {
+    max-width: 600px;
+    margin: 0 auto 3rem;
+}
+
+.search-wrapper {
+    display: flex;
+}
+
+.search-input-large {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: 2px solid var(--border);
+    border-right: none;
+    border-radius: var(--radius) 0 0 var(--radius);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    background: var(--bg-card-alt);
+    color: var(--text-main);
+}
+
+.search-input-large:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+}
+
+.search-button-large {
+    padding: 1rem 2rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background var(--transition);
+}
+
+.search-button-large:hover {
+    background: var(--primary-dark);
+}
+
+/* Results with network layout */
+.results-with-network {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.results-list-container {
+    max-height: 700px;
+    overflow-y: auto;
+    padding-right: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--border);
+}
+
+.results-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.results-list-container::-webkit-scrollbar-track {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.results-list-container::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid var(--border);
+}
+
+.results-header h3 {
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.results-count {
+    background: var(--primary-light);
+    color: white;
+    padding: 0.2rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.result-item {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    transition: all var(--transition);
+    overflow: hidden;
+    position: relative;
+}
+
+.result-item.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+}
+
+.result-item:hover {
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.result-link {
+    display: block;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text-main);
+}
+
+.result-link h3 {
+    color: var(--primary);
+    margin-bottom: 0.4rem;
+    font-family: var(--font-display);
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.result-badge {
+    background: var(--primary);
+    color: white;
+    padding: 0.2rem 0.7rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+}
+
+.result-definition {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.result-synonyms {
+    color: #16a34a;
+    font-size: 0.88rem;
+}
+
+.semantic-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+    border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.semantic-btn:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    letter-spacing: 0.5px;
+}
+
+.semantic-icon {
+    font-size: 1.1rem;
+}
+
+/* Semantic Network Container */
+.semantic-network-container {
+    background: linear-gradient(135deg, rgba(18, 12, 35, 0.05), rgba(8, 5, 20, 0.05));
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    position: sticky;
+    top: 100px;
+}
+
+.semantic-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.semantic-header h3 {
+    color: var(--primary);
+    font-size: 1.3rem;
+    margin-bottom: 0.3rem;
+    font-family: var(--font-display);
+}
+
+.semantic-header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+#currentWordDisplay {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.semantic-network {
+    width: 100%;
+    height: 500px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.network-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 2rem;
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Расширенная легенда */
+.semantic-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.synonym-color { background: #4CAF50; }
+.antonym-color { background: #f44336; }
+.hyperonym-color { background: #FF9800; }
+.hyponym-color { background: #2196F3; }
+.holonym-color { background: #9C27B0; }
+.meronym-color { background: #FF6B6B; }
+.homonym-color { background: #00BCD4; }
+.paronym-color { background: #FFC107; }
+.usage-color { background: #795548; }
+
+.legend-label {
+    color: var(--text-muted);
+}
+
+/* Стили для D3 графа */
+.node {
+    cursor: pointer;
+    transition: r 0.2s;
+}
+
+.node:hover {
+    filter: brightness(1.2);
+    r: 18 !important;
+}
+
+.node.focused {
+    filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.8));
+}
+
+.node-label {
+    font-size: 10px;
+    font-weight: 500;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.7);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.link {
+    stroke-opacity: 0.6;
+    transition: stroke-opacity 0.2s;
+}
+
+.link:hover {
+    stroke-opacity: 1;
+    stroke-width: 3px;
+}
+
+/* Tooltip */
+.semantic-tooltip {
+    position: absolute;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    pointer-events: none;
+    z-index: 1000;
+    max-width: 250px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.tooltip-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #a78bfa;
+    font-size: 12px;
+}
+
+.tooltip-type {
+    font-size: 9px;
+    opacity: 0.7;
+    margin-bottom: 4px;
+}
+
+.tooltip-relations {
+    border-top: 1px solid rgba(255,255,255,0.2);
+    margin-top: 4px;
+    padding-top: 4px;
+}
+
+.relation-item {
+    font-size: 10px;
+    margin: 2px 0;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 968px) {
+    .results-with-network {
+        grid-template-columns: 1fr;
+    }
+
+    .semantic-network-container {
+        position: static;
+        margin-top: 2rem;
+    }
+
+    .semantic-network {
+        height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-page {
+        padding: 1.5rem;
+    }
+
+    .search-wrapper {
+        flex-direction: column;
+    }
+
+    .search-input-large {
+        border-radius: var(--radius) var(--radius) 0 0;
+        border-right: 2px solid var(--border);
+    }
+
+    .search-button-large {
+        border-radius: 0 0 var(--radius) var(--radius);
+    }
+}
+</style>
+
+<script>
+// Текущее активное слово
+let currentActiveWord = '{{ results[0].word if results else "" }}';
+let tooltip = null;
+
+// Функция для показа семантической сети
+function showSemanticNetwork(word) {
+    // Обновляем активное слово
+    currentActiveWord = word;
+    document.getElementById('currentWordDisplay').textContent = word;
+
+    // Подсвечиваем соответствующий результат в списке
+    highlightResult(word);
+
+    // Показываем индикатор загрузки
+    const container = document.getElementById('semanticNetwork');
+    container.innerHTML = `
+        <div class="network-placeholder">
+            <div class="placeholder-icon">🔄</div>
+            <p>Semantik tarmoq yuklanmoqda...</p>
+        </div>
+    `;
+
+    fetch(`/api/semantic-network/${encodeURIComponent(word)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                // Если слово не найдено, создаем минимальную сеть с одним узлом
+                createMinimalNetwork(word);
+            } else {
+                // Всегда рисуем сеть, даже если там только один узел
+                drawSemanticNetwork(data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading semantic network:', error);
+            // При ошибке создаем минимальную сеть
+            createMinimalNetwork(word);
+        });
+}
+
+// Функция для создания минимальной сети (всегда показывает узел)
+function createMinimalNetwork(word) {
+    const minimalData = {
+        focus: word,
+        nodes: [
+            { id: word, type: 'main' }
+        ],
+        links: []
+    };
+    drawSemanticNetwork(minimalData);
+}
+
+// Функция для загрузки деталей слова
+function loadWordDetails(word) {
+    fetch(`/api/word-details/${encodeURIComponent(word)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                updateResultInList(word, data);
+            }
+        })
+        .catch(error => console.error('Error loading word details:', error));
+}
+
+// Функция для обновления результата в списке
+function updateResultInList(word, data) {
+    let resultItem = document.getElementById(`result-${word.replace(/ /g, '-')}`);
+
+    if (resultItem) {
+        const badgeEl = resultItem.querySelector('.result-badge');
+        const definitionEl = resultItem.querySelector('.result-definition');
+        const synonymsEl = resultItem.querySelector('.result-synonyms small');
+
+        if (badgeEl) badgeEl.textContent = data.turkum || 'no-malum';
+        if (definitionEl) {
+            definitionEl.textContent = data.definition || 'Ta\'rif mavjud emas';
+        }
+        if (synonymsEl && data.sinonimlar && data.sinonimlar.length) {
+            synonymsEl.textContent = `Sinonimlar: ${data.sinonimlar.join(', ')}`;
+        }
+    }
+}
+
+// Функция для подсветки активного результата
+function highlightResult(word) {
+    document.querySelectorAll('.result-item').forEach(item => {
+        item.classList.remove('active');
+    });
+
+    const activeResult = document.getElementById(`result-${word.replace(/ /g, '-')}`);
+    if (activeResult) {
+        activeResult.classList.add('active');
+        activeResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// Функция для создания тултипа
+function showTooltip(event, d, relations) {
+    if (tooltip) tooltip.remove();
+
+    tooltip = document.createElement('div');
+    tooltip.className = 'semantic-tooltip';
+    tooltip.style.left = (event.pageX + 10) + 'px';
+    tooltip.style.top = (event.pageY + 10) + 'px';
+
+    let relationsHtml = '';
+    for (const [type, words] of Object.entries(relations)) {
+        if (words && words.length > 0) {
+            const typeIcon = {
+                'синоним': '🔄',
+                'антоним': '⚔️',
+                'гипероним': '⬆️',
+                'гипоним': '⬇️',
+                'холоним': '🔗',
+                'мероним': '🧩',
+                'омоним': '🔤',
+                'пароним': '🎤',
+                'qollanilishi': '🏷️'
+            }[type] || '📌';
+
+            relationsHtml += `<div class="relation-item">${typeIcon} ${type}: ${words.slice(0, 3).join(', ')}${words.length > 3 ? '...' : ''}</div>`;
+        }
+    }
+
+    tooltip.innerHTML = `
+        <div class="tooltip-title">${d.id}</div>
+        <div class="tooltip-type">Tur: ${d.type || 'asosiy'}</div>
+        ${relationsHtml ? `<div class="tooltip-relations">${relationsHtml}</div>` : ''}
+    `;
+
+    document.body.appendChild(tooltip);
+}
+
+// Функция для скрытия тултипа
+function hideTooltip() {
+    if (tooltip) {
+        tooltip.remove();
+        tooltip = null;
+    }
+}
+
+// Функция для отрисовки семантической сети
+function drawSemanticNetwork(data) {
+    const container = document.getElementById('semanticNetwork');
+    container.innerHTML = '';
+
+    if (!data.nodes || data.nodes.length === 0) {
+        data = {
+            focus: currentActiveWord,
+            nodes: [{ id: currentActiveWord, type: 'main' }],
+            links: []
+        };
+    }
+
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    const svg = d3.select("#semanticNetwork")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    const g = svg.append("g");
+
+    const zoom = d3.zoom()
+        .scaleExtent([0.3, 3])
+        .on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        });
+
+    svg.call(zoom);
+
+    // Если есть только один узел
+    if (data.nodes.length === 1) {
+        g.append("circle")
+            .attr("cx", width / 2)
+            .attr("cy", height / 2)
+            .attr("r", 30)
+            .attr("fill", "#667eea")
+            .attr("stroke", "#ffd700")
+            .attr("stroke-width", 3)
+            .attr("class", "node");
+
+        g.append("text")
+            .attr("x", width / 2)
+            .attr("y", height / 2 - 35)
+            .attr("text-anchor", "middle")
+            .attr("class", "node-label")
+            .attr("font-size", "14px")
+            .attr("font-weight", "bold")
+            .text(data.focus);
+
+        g.append("text")
+            .attr("x", width / 2)
+            .attr("y", height / 2 + 45)
+            .attr("text-anchor", "middle")
+            .attr("class", "node-label")
+            .attr("font-size", "12px")
+            .attr("fill", "#666")
+            .text("Asosiy so'z");
+
+        return;
+    }
+
+    // Создаем силы для графа
+    const simulation = d3.forceSimulation(data.nodes)
+        .force("link", d3.forceLink(data.links).id(d => d.id).distance(120))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(50));
+
+    // Рисуем связи
+    const link = g.append("g")
+        .selectAll("line")
+        .data(data.links)
+        .enter()
+        .append("line")
+        .attr("class", "link")
+        .attr("stroke", d => {
+            switch(d.type) {
+                case 'синоним': return '#4CAF50';
+                case 'антоним': return '#f44336';
+                case 'гипероним': return '#FF9800';
+                case 'гипоним': return '#2196F3';
+                case 'холоним': return '#9C27B0';
+                case 'мероним': return '#FF6B6B';
+                case 'омоним': return '#00BCD4';
+                case 'пароним': return '#FFC107';
+                case 'qollanilishi': return '#795548';
+                default: return '#999';
+            }
+        })
+        .attr("stroke-width", 2)
+        .attr("stroke-opacity", 0.6);
+
+    // Рисуем узлы
+    const node = g.append("g")
+        .selectAll("circle")
+        .data(data.nodes)
+        .enter()
+        .append("circle")
+        .attr("class", "node")
+        .attr("r", d => d.id === data.focus ? 22 : 16)
+        .attr("fill", d => {
+            if (d.id === data.focus) return '#667eea';
+            switch(d.type) {
+                case 'синоним': return '#4CAF50';
+                case 'антоним': return '#f44336';
+                case 'гипероним': return '#FF9800';
+                case 'гипоним': return '#2196F3';
+                case 'холоним': return '#9C27B0';
+                case 'мероним': return '#FF6B6B';
+                case 'омоним': return '#00BCD4';
+                case 'пароним': return '#FFC107';
+                case 'qollanilishi': return '#795548';
+                default: return '#999';
+            }
+        })
+        .attr("stroke", d => d.id === data.focus ? '#ffd700' : '#fff')
+        .attr("stroke-width", d => d.id === data.focus ? 3 : 2)
+        .attr("data-word", d => d.id)
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    // Добавляем подписи
+    const label = g.append("g")
+        .selectAll("text")
+        .data(data.nodes)
+        .enter()
+        .append("text")
+        .attr("class", "node-label")
+        .attr("dy", -25)
+        .attr("text-anchor", "middle")
+        .text(d => d.id.length > 15 ? d.id.substring(0, 12) + '...' : d.id)
+        .attr("fill", "#333")
+        .attr("font-weight", d => d.id === data.focus ? "bold" : "normal")
+        .attr("font-size", d => d.id === data.focus ? "12px" : "10px")
+        .attr("pointer-events", "none");
+
+    // Обработчики событий
+    node.on("click", function(event, d) {
+        event.stopPropagation();
+        if (d.id !== currentActiveWord) {
+            showSemanticNetwork(d.id);
+        }
+    })
+    .on("mouseover", function(event, d) {
+        const relations = {};
+        data.links.forEach(link => {
+            if (link.source.id === d.id || link.source === d.id) {
+                if (!relations[link.type]) relations[link.type] = [];
+                relations[link.type].push(link.target.id || link.target);
+            }
+            if (link.target.id === d.id || link.target === d.id) {
+                if (!relations[link.type]) relations[link.type] = [];
+                relations[link.type].push(link.source.id || link.source);
+            }
+        });
+        showTooltip(event, d, relations);
+    })
+    .on("mouseout", hideTooltip);
+
+    // Симуляция
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        node
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y);
+
+        label
+            .attr("x", d => d.x)
+            .attr("y", d => d.y);
+    });
+
+    // Drag функции
+    function dragstarted(event) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+        hideTooltip();
+    }
+
+    function dragged(event) {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+    }
+
+    function dragended(event) {
+        if (!event.active) simulation.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+    }
+
+    // Центрируем на фокусном слове
+    setTimeout(() => {
+        const focusNode = data.nodes.find(n => n.id === data.focus);
+        if (focusNode) {
+            const transform = d3.zoomIdentity
+                .translate(width / 2 - focusNode.x, height / 2 - focusNode.y)
+                .scale(1);
+            svg.call(zoom.transform, transform);
+        }
+    }, 100);
+}
+
+// Загрузка при старте
+document.addEventListener('DOMContentLoaded', function() {
+    const firstResult = document.querySelector('.result-item');
+    if (firstResult) {
+        const word = firstResult.dataset.word;
+        setTimeout(() => {
+            showSemanticNetwork(word);
+        }, 500);
+    }
+});
+
+// Обновление при изменении размера окна
+let resizeTimeout;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        if (currentActiveWord) {
+            showSemanticNetwork(currentActiveWord);
+        }
+    }, 250);
+});
+
+// Поиск по Enter
+document.getElementById('mainSearchInput')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        this.form.submit();
+    }
+});
+</script>
+{% endblock %}

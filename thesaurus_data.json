@@ -1,0 +1,75 @@
+{
+    "слова": {
+        "uy": {
+            "синонимы": ["bino", "imorat", "turar joy", "hovli", "qasr"],
+            "антонимы": ["ko'cha", "sahro"],
+            "гиперонимы": ["inshoot", "bino", "ko'chmas mulk"],
+            "гипонимы": ["kulba", "hovli", "saroy"],
+            "определение": "Odamlar yashashi uchun mo'ljallangan bino, turar joy",
+            "etimologiyasi": ["Qadimgi turkiy \"uy\" so'zidan kelib chiqqan. Dastlab boshpana ma'nosini bildirgan."],
+            "turkumi": ["ot"],
+            "termin_tarkibi": ["tub so'z"],
+            "qollanilishi": ["kundalik hayot", "qurilish"]
+        },
+        "quvonch": {
+            "синонимы": ["baxt", "xursandchilik", "shodlik", "zavq", "suroor"],
+            "антонимы": ["g'amginlik", "qayg'u", "hasrat"],
+            "гиперонимы": ["hissiyot", "tuyg'u"],
+            "гипонимы": ["eyforiya", "xursandlik"],
+            "определение": "Rohatlanish, ichki qoniqish hissi, xursand kayfiyat",
+            "etimologiyasi": ["Qadimgi turkiy \"quvan-\" fe'lidan kelib chiqqan."],
+            "turkumi": ["ot"],
+            "termin_tarkibi": ["tub so'z"],
+            "qollanilishi": ["psixologiya", "kundalik hayot"]
+        },
+        "tez": {
+            "синонимы": ["chaqqon", "ildam", "uchqur", "shiddatli", "jadal"],
+            "антонимы": ["sekin", "sust", "bemalol"],
+            "гиперонимы": ["tezkor", "jadallik"],
+            "гипонимы": ["birdan", "darhol", "zudlik"],
+            "определение": "Katta tezlikda sodir bo'ladigan, qisqa vaqt ichida amalga oshadigan",
+            "etimologiyasi": ["Qadimgi turkiy \"tez\" so'zidan kelib chiqqan."],
+            "turkumi": ["ravish", "sifat"],
+            "termin_tarkibi": ["tub so'z"],
+            "qollanilishi": ["kundalik hayot"]
+        },
+        "chiroyli": {
+            "синонимы": ["go'zal", "kelishgan", "ko'rkam", "suluv", "zeboli"],
+            "антонимы": ["xunuk", "badvashsha", "ko'rimsiz"],
+            "гиперонимы": ["estetik", "yoqimli"],
+            "гипонимы": ["nafis", "latofatli", "salobatli"],
+            "определение": "Ko'zga yoqadigan, tashqi ko'rinishi bilan zavq bag'ishlaydigan",
+            "etimologiyasi": ["\"Chiroy\" so'zidan yasalgan."],
+            "turkumi": ["sifat"],
+            "termin_tarkibi": ["yasalgan so'z"],
+            "qollanilishi": ["kundalik hayot", "san'at"]
+        },
+        "o'ylamoq": {
+            "синонимы": ["fikrlamoq", "mulohaza qilmoq", "tafakkur qilmoq", "bosh qotirmoq"],
+            "антонимы": ["harakatsiz bo'lmoq"],
+            "гиперонимы": ["mulohaza", "tahlil"],
+            "гипонимы": ["orzu qilmoq", "eslamoq", "taxmin qilmoq"],
+            "определение": "Fikrlarni biror narsaga qaratmoq, mulohaza yuritmoq",
+            "etimologiyasi": ["\"O'y\" so'zidan yasalgan."],
+            "turkumi": ["fe'l"],
+            "termin_tarkibi": ["yasalgan so'z"],
+            "qollanilishi": ["kundalik hayot", "psixologiya"]
+        },
+        "tuproq": {
+            "синонимы": ["yer", "xok", "zamin", "turab"],
+            "антонимы": ["suv", "havo", "osmon"],
+            "гиперонимы": ["tabiiy jism", "litosfera", "geologik muhit"],
+            "гипонимы": ["qora tuproq", "qumloq tuproq", "saz tuproq", "botqoq tuproq", "sho'rxok tuproq"],
+            "определение": "1. Litosfera yuza qavatlarining suv, havo va tirik organizmlar ta'sirida o'zgarishidan shakllanadigan va genetik jihatdan o'zaro bog'liq gorizontlardan tashkil topgan tabiiy tuzilma; Yer po'stining yuza va unumdor qatlami. 2. Yer qobig'ining o'simlik rizq olib o'sadigan ustki qatlami; yer. 3. O'lgan kishining xoki; xok.",
+            "etimologiyasi": ["Qadimgi turkiy topraq / toprak shaklidan kelib chiqqan. Dastlab yerning yumshoq, haydaladigan qatlami ma'nosini bildirgan. Keyinchalik ilmiy termin sifatida geologik va agronomik tushunchani ifodalagan."],
+            "turkumi": ["ot"],
+            "termin_tarkibi": ["tub so'z"],
+            "xolonim": ["yer qobig'i", "litosfera"],
+            "meronim": ["gumus", "mineral zarrachalar", "qum", "loy", "suv", "havo"],
+            "omonim": ["vatan", "yurt"],
+            "paronim": ["yo'q"],
+            "qollanilishi": ["entomologiya", "qishloq xo'jaligi", "geologiya", "ekologiya", "tuproqshunoslik"]
+        }
+    },
+    "категории": ["otlar", "sifatlar", "fe'llar", "ravishlar", "geologik terminlar", "qishloq xo'jaligi terminlari"]
+}

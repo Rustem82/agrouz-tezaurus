@@ -1,0 +1,902 @@
+{% extends "base.html" %}
+
+{% block title %}{{ word }} - Tezaurus{% endblock %}
+
+{% block content %}
+<div class="word-detail-page">
+    <div class="word-header">
+        <h1>{{ word }}</h1>
+        <div class="word-badges">
+            {% if data.turkumi %}
+                <span class="badge">{{ data.turkumi|join(', ') }}</span>
+            {% endif %}
+            {% if data.termin_tarkibi %}
+                <span class="badge">{{ data.termin_tarkibi|join(', ') }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="word-sections">
+        <!-- Ta'rif (Izohi) -->
+        {% if data.определение %}
+        <div class="word-section">
+            <h2>📖 Ta'rif</h2>
+            <div class="definition-text">
+                {{ data.определение }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Ingliz tilida tarjima -->
+        {% if data.translation_en %}
+        <div class="word-section">
+            <h2>🇬🇧 Ingliz tilida</h2>
+            <div class="translation-text">
+                {{ data.translation_en }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Etimologiyasi -->
+        {% if data.etimologiyasi %}
+        <div class="word-section">
+            <h2>📜 Etimologiyasi</h2>
+            <div class="etymology-text">
+                {% for etim in data.etimologiyasi %}
+                    <p>{{ etim }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sinonimlari -->
+        {% if data.синонимы %}
+        <div class="word-section">
+            <h2>🔄 Sinonimlari</h2>
+            <div class="word-tags">
+                {% for synonym in data.синонимы %}
+                <a href="{{ url_for('word_detail', word=synonym) }}" class="word-tag synonym">{{ synonym }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Antonimlari -->
+        {% if data.антонимы %}
+        <div class="word-section">
+            <h2>⚔️ Antonimlari</h2>
+            <div class="word-tags">
+                {% for antonym in data.антонимы %}
+                <a href="{{ url_for('word_detail', word=antonym) }}" class="word-tag antonym">{{ antonym }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Giperonimlari (jins) -->
+        {% if data.гиперонимы %}
+        <div class="word-section">
+            <h2>⬆️ Giperonimlari (umumiy tushunchalar)</h2>
+            <div class="word-tags">
+                {% for hyperonym in data.гиперонимы %}
+                <a href="{{ url_for('word_detail', word=hyperonym) }}" class="word-tag hyperonym">{{ hyperonym }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Giponimlari (tur) -->
+        {% if data.гипонимы %}
+        <div class="word-section">
+            <h2>⬇️ Giponimlari (xususiy tushunchalar)</h2>
+            <div class="word-tags">
+                {% for hyponym in data.гипонимы %}
+                <a href="{{ url_for('word_detail', word=hyponym) }}" class="word-tag hyponym">{{ hyponym }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Xolonimi (butun) -->
+        {% if data.xolonim %}
+        <div class="word-section">
+            <h2>🔗 Xolonimi (tarkibidagi butun)</h2>
+            <div class="word-tags">
+                {% for holonym in data.xolonim %}
+                <a href="{{ url_for('word_detail', word=holonym) }}" class="word-tag holonym">{{ holonym }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Meronimi (qism) -->
+        {% if data.meronim %}
+        <div class="word-section">
+            <h2>🧩 Meronimi (tarkibiy qismlari)</h2>
+            <div class="word-tags">
+                {% for meronym in data.meronim %}
+                <span class="word-tag meronym">{{ meronym }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Omonimlari (shakldosh) -->
+        {% if data.omonim %}
+        <div class="word-section">
+            <h2>🔤 Omonimlari (shakldosh so'zlar)</h2>
+            <div class="word-tags">
+                {% for homonym in data.omonim %}
+                <a href="{{ url_for('word_detail', word=homonym) }}" class="word-tag homonym">{{ homonym }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Paronimlari (talaffuzdosh) -->
+        {% if data.paronim and data.paronim != ["yo'q"] %}
+        <div class="word-section">
+            <h2>🎤 Paronimlari (talaffuzdosh so'zlar)</h2>
+            <div class="word-tags">
+                {% for paronym in data.paronim %}
+                <a href="{{ url_for('word_detail', word=paronym) }}" class="word-tag paronym">{{ paronym }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Qo'llanilish sohasi -->
+        {% if data.qollanilishi %}
+        <div class="word-section">
+            <h2>🏷️ Qo'llanilish sohasi</h2>
+            <div class="word-tags">
+                {% for field in data.qollanilishi %}
+                <span class="field-tag">{{ field }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="word-actions">
+        <button onclick="showSemanticNetworkModal('{{ word }}')" class="semantic-action-btn">
+            🕸️ Semantik tarmoqni ko'rish
+        </button>
+        <button onclick="history.back()" class="back-btn">← Orqaga</button>
+    </div>
+</div>
+
+<!-- Semantik tarmoq modal oynasi -->
+<div id="semanticModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2>🕸️ "{{ word }}" so'zining semantik tarmog'i</h2>
+            <span class="close-btn" onclick="closeSemanticModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="semanticNetworkModal" style="height: 500px; width: 100%; background: white; border-radius: 12px;"></div>
+            <div class="semantic-legend-modal">
+                <div class="legend-title">📖 Bog'lanish turlari:</div>
+                <div class="legend-items">
+                    <div class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> Sinonim</div>
+                    <div class="legend-item"><span class="legend-color" style="background: #f44336;"></span> Antonim</div>
+                    <div class="legend-item"><span class="legend-color" style="background: #FF9800;"></span> Giperonim</div>
+                    <div class="legend-item"><span class="legend-color" style="background: #2196F3;"></span> Giponim</div>
+                    <div class="legend-item"><span class="legend-color" style="background: #9C27B0;"></span> Holonim</div>
+                    <div class="legend-item"><span class="legend-color" style="background: #FF6B6B;"></span> Meronim</div>
+                    <div class="legend-item"><span class="legend-color" style="background: #00BCD4;"></span> Omonim</div>
+                    <div class="legend-item"><span class="legend-color" style="background: #FFC107;"></span> Paronim</div>
+                    <div class="legend-item"><span class="legend-color" style="background: #795548;"></span> Qo'llanilish</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- D3.js library -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+.word-badges {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.badge {
+    background: #667eea;
+    color: white;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.definition-text {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    line-height: 1.8;
+    font-size: 1.1rem;
+    border-left: 4px solid #667eea;
+}
+
+.translation-text {
+    background: linear-gradient(135deg, #e8f0fe 0%, #dce8f5 100%);
+    padding: 1.5rem;
+    border-radius: 10px;
+    line-height: 1.8;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #1a56db;
+    border-left: 4px solid #1a56db;
+    font-family: 'Sora', monospace;
+}
+
+.etymology-text {
+    background: #fff8e7;
+    padding: 1.5rem;
+    border-radius: 10px;
+    line-height: 1.8;
+    font-style: italic;
+    border-left: 4px solid #ff9800;
+}
+
+.word-tag {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: #f0f4ff;
+    color: #667eea;
+    text-decoration: none;
+    border-radius: 20px;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+}
+
+.word-tag:hover {
+    background: white;
+    border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+.word-tag.synonym {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.word-tag.antonym {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.word-tag.hyperonym {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.word-tag.hyponym {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.word-tag.holonym {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.word-tag.meronym {
+    background: #e1f5fe;
+    color: #0288d1;
+    cursor: default;
+}
+
+.word-tag.homonym {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.word-tag.paronym {
+    background: #e0f7fa;
+    color: #00838f;
+}
+
+.field-tag {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: #e0e0e0;
+    color: #424242;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: default;
+}
+
+.word-section {
+    margin-bottom: 2.5rem;
+    animation: slideIn 0.5s ease-out;
+}
+
+.word-section h2 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    position: relative;
+    padding-left: 1rem;
+    border-left: 4px solid #667eea;
+}
+
+.word-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.back-btn {
+    padding: 0.8rem 2rem;
+    background: #e5e7eb;
+    color: #666;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.back-btn:hover {
+    background: #d1d5db;
+    color: #333;
+}
+
+.semantic-action-btn {
+    padding: 0.8rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+}
+
+.semantic-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    letter-spacing: 0.5px;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 24px;
+    max-width: 90vw;
+    width: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+    animation: modalSlideIn 0.3s ease;
+}
+
+.modal-large {
+    max-width: 1000px;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.modal-header h2 {
+    font-size: 1.3rem;
+    margin: 0;
+}
+
+.close-btn {
+    font-size: 2rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: white;
+    transition: transform 0.2s;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    transform: scale(1.2);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    max-height: calc(85vh - 70px);
+}
+
+/* Legend for modal */
+.semantic-legend-modal {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.legend-title {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+}
+
+.legend-items .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: #555;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+/* Node and link styles for D3 */
+.node {
+    cursor: pointer;
+    transition: r 0.2s;
+}
+
+.node:hover {
+    filter: brightness(1.2);
+}
+
+.node-label {
+    font-size: 10px;
+    font-weight: 500;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.7);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.link {
+    stroke-opacity: 0.6;
+    transition: stroke-opacity 0.2s;
+}
+
+.link:hover {
+    stroke-opacity: 1;
+    stroke-width: 3px;
+}
+
+.semantic-tooltip {
+    position: absolute;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    pointer-events: none;
+    z-index: 10001;
+    max-width: 250px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .definition-text,
+    .translation-text,
+    .etymology-text {
+        padding: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .word-section h2 {
+        font-size: 1.2rem;
+    }
+
+    .word-tag {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .word-actions {
+        flex-direction: column;
+    }
+
+    .semantic-action-btn, .back-btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        max-width: 95vw;
+    }
+
+    .modal-header h2 {
+        font-size: 1rem;
+    }
+
+    .legend-items {
+        gap: 0.5rem;
+    }
+}
+</style>
+
+<script>
+let semanticTooltip = null;
+let currentNetworkWord = '{{ word }}';
+
+// Semantik tarmoq modalini ochish
+function showSemanticNetworkModal(word) {
+    const modal = document.getElementById('semanticModal');
+    const container = document.getElementById('semanticNetworkModal');
+
+    // Modalni ko'rsatish
+    modal.classList.add('show');
+
+    // Yuklanish holati
+    container.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #999;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🕸️</div>
+            <p>Semantik tarmoq yuklanmoqda...</p>
+        </div>
+    `;
+
+    // API dan ma'lumot olish
+    fetch(`/api/semantic-network/${encodeURIComponent(word)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #f44336;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                        <p>${data.error}</p>
+                    </div>
+                `;
+            } else {
+                drawSemanticNetworkInModal(data, container);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #f44336;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                    <p>Xatolik yuz berdi</p>
+                </div>
+            `;
+        });
+}
+
+// Modalni yopish
+function closeSemanticModal() {
+    const modal = document.getElementById('semanticModal');
+    modal.classList.remove('show');
+
+    // Grafni tozalash
+    const container = document.getElementById('semanticNetworkModal');
+    if (container) {
+        container.innerHTML = '';
+    }
+}
+
+// Tarmoqni chizish (search.html dagi funksiyaga o'xshash)
+function drawSemanticNetworkInModal(data, container) {
+    container.innerHTML = '';
+
+    if (!data.nodes || data.nodes.length === 0) {
+        data = {
+            focus: currentNetworkWord,
+            nodes: [{ id: currentNetworkWord, type: 'main' }],
+            links: []
+        };
+    }
+
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 500;
+
+    const svg = d3.select("#semanticNetworkModal")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    const g = svg.append("g");
+
+    const zoom = d3.zoom()
+        .scaleExtent([0.3, 3])
+        .on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        });
+
+    svg.call(zoom);
+
+    // Bitta node bo'lsa
+    if (data.nodes.length === 1) {
+        g.append("circle")
+            .attr("cx", width / 2)
+            .attr("cy", height / 2)
+            .attr("r", 35)
+            .attr("fill", "#667eea")
+            .attr("stroke", "#ffd700")
+            .attr("stroke-width", 3)
+            .attr("class", "node");
+
+        g.append("text")
+            .attr("x", width / 2)
+            .attr("y", height / 2 - 40)
+            .attr("text-anchor", "middle")
+            .attr("class", "node-label")
+            .attr("font-size", "14px")
+            .attr("font-weight", "bold")
+            .text(data.focus);
+
+        g.append("text")
+            .attr("x", width / 2)
+            .attr("y", height / 2 + 50)
+            .attr("text-anchor", "middle")
+            .attr("class", "node-label")
+            .attr("font-size", "12px")
+            .attr("fill", "#666")
+            .text("Asosiy so'z");
+
+        return;
+    }
+
+    // Simulyatsiya
+    const simulation = d3.forceSimulation(data.nodes)
+        .force("link", d3.forceLink(data.links).id(d => d.id).distance(130))
+        .force("charge", d3.forceManyBody().strength(-500))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(60));
+
+    // Bog'lanishlar
+    const link = g.append("g")
+        .selectAll("line")
+        .data(data.links)
+        .enter()
+        .append("line")
+        .attr("class", "link")
+        .attr("stroke", d => {
+            switch(d.type) {
+                case 'синоним': return '#4CAF50';
+                case 'антоним': return '#f44336';
+                case 'гипероним': return '#FF9800';
+                case 'гипоним': return '#2196F3';
+                case 'холоним': return '#9C27B0';
+                case 'мероним': return '#FF6B6B';
+                case 'омоним': return '#00BCD4';
+                case 'пароним': return '#FFC107';
+                case 'qollanilishi': return '#795548';
+                default: return '#999';
+            }
+        })
+        .attr("stroke-width", 2)
+        .attr("stroke-opacity", 0.6);
+
+    // Node'lar
+    const node = g.append("g")
+        .selectAll("circle")
+        .data(data.nodes)
+        .enter()
+        .append("circle")
+        .attr("class", "node")
+        .attr("r", d => d.id === data.focus ? 28 : 18)
+        .attr("fill", d => {
+            if (d.id === data.focus) return '#667eea';
+            switch(d.type) {
+                case 'синоним': return '#4CAF50';
+                case 'антоним': return '#f44336';
+                case 'гипероним': return '#FF9800';
+                case 'гипоним': return '#2196F3';
+                case 'холоним': return '#9C27B0';
+                case 'мероним': return '#FF6B6B';
+                case 'омоним': return '#00BCD4';
+                case 'пароним': return '#FFC107';
+                case 'qollanilishi': return '#795548';
+                default: return '#999';
+            }
+        })
+        .attr("stroke", d => d.id === data.focus ? '#ffd700' : '#fff')
+        .attr("stroke-width", d => d.id === data.focus ? 3 : 2)
+        .attr("data-word", d => d.id)
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    // Label'lar
+    const label = g.append("g")
+        .selectAll("text")
+        .data(data.nodes)
+        .enter()
+        .append("text")
+        .attr("class", "node-label")
+        .attr("dy", -28)
+        .attr("text-anchor", "middle")
+        .text(d => d.id.length > 18 ? d.id.substring(0, 15) + '...' : d.id)
+        .attr("fill", "#333")
+        .attr("font-weight", d => d.id === data.focus ? "bold" : "normal")
+        .attr("font-size", d => d.id === data.focus ? "12px" : "10px")
+        .attr("pointer-events", "none");
+
+    // Tugmani bosganda yangi so'zni yuklash
+    node.on("click", function(event, d) {
+        event.stopPropagation();
+        if (d.id !== currentNetworkWord) {
+            currentNetworkWord = d.id;
+            closeSemanticModal();
+            showSemanticNetworkModal(d.id);
+        }
+    })
+    .on("mouseover", function(event, d) {
+        showTooltipInModal(event, d);
+    })
+    .on("mouseout", hideTooltipInModal);
+
+    // Simulyatsiya
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        node
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y);
+
+        label
+            .attr("x", d => d.x)
+            .attr("y", d => d.y);
+    });
+
+    function dragstarted(event) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+        hideTooltipInModal();
+    }
+
+    function dragged(event) {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+    }
+
+    function dragended(event) {
+        if (!event.active) simulation.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+    }
+
+    // Fokus so'zga markazlash
+    setTimeout(() => {
+        const focusNode = data.nodes.find(n => n.id === data.focus);
+        if (focusNode && focusNode.x && focusNode.y) {
+            const transform = d3.zoomIdentity
+                .translate(width / 2 - focusNode.x, height / 2 - focusNode.y)
+                .scale(1);
+            svg.call(zoom.transform, transform);
+        }
+    }, 100);
+}
+
+// Tooltip ko'rsatish
+function showTooltipInModal(event, d) {
+    if (semanticTooltip) semanticTooltip.remove();
+
+    semanticTooltip = document.createElement('div');
+    semanticTooltip.className = 'semantic-tooltip';
+    semanticTooltip.style.left = (event.pageX + 15) + 'px';
+    semanticTooltip.style.top = (event.pageY + 15) + 'px';
+
+    const typeNames = {
+        'main': '🎯 Asosiy so\'z',
+        'синоним': '🔄 Sinonim',
+        'антоним': '⚔️ Antonim',
+        'гипероним': '⬆️ Giperonim',
+        'гипоним': '⬇️ Giponim',
+        'холоним': '🔗 Holonim',
+        'мероним': '🧩 Meronim',
+        'омоним': '🔤 Omonim',
+        'пароним': '🎤 Paronim',
+        'qollanilishi': '🏷️ Qo\'llanilish sohasi'
+    };
+
+    semanticTooltip.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 5px; color: #a78bfa;">${d.id}</div>
+        <div style="font-size: 10px; opacity: 0.8;">${typeNames[d.type] || 'Bog\'lanish'}</div>
+        <div style="font-size: 9px; margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 5px;">
+            🔍 Ko'rish uchun bosing
+        </div>
+    `;
+
+    document.body.appendChild(semanticTooltip);
+}
+
+function hideTooltipInModal() {
+    if (semanticTooltip) {
+        semanticTooltip.remove();
+        semanticTooltip = null;
+    }
+}
+
+// Modal tashqarisiga bosganda yopish
+window.onclick = function(event) {
+    const modal = document.getElementById('semanticModal');
+    if (event.target === modal) {
+        closeSemanticModal();
+    }
+}
+
+// Oyna o'lchami o'zgarganda qayta chizish
+let resizeTimeoutModal;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeoutModal);
+    resizeTimeoutModal = setTimeout(() => {
+        if (document.getElementById('semanticModal').classList.contains('show')) {
+            const word = currentNetworkWord;
+            closeSemanticModal();
+            showSemanticNetworkModal(word);
+        }
+    }, 250);
+});
+</script>
+{% endblock %}

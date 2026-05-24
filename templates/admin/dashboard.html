@@ -1,0 +1,577 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Tezaurus{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1>📊 Admin panel</h1>
+            <p>Tezaurus ma'lumotlarini boshqarish</p>
+        </div>
+        <div class="header-date">
+            <span class="current-date">{{ now().strftime('%d.%m.%Y') }}</span>
+        </div>
+    </div>
+
+    <!-- Asosiy statistik kartalar -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">📚</div>
+            <div class="stat-content">
+                <span class="stat-label">Jami so'zlar</span>
+                <span class="stat-number">{{ words_count }}</span>
+                <span class="stat-trend positive">+12%</span>
+            </div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon">🏷️</div>
+            <div class="stat-content">
+                <span class="stat-label">Kategoriyalar</span>
+                <span class="stat-number">{{ categories_count }}</span>
+                <span class="stat-trend">faol</span>
+            </div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-content">
+                <span class="stat-label">Sinonimlar</span>
+                <span class="stat-number">{{ total_synonyms }}</span>
+                <span class="stat-trend">ta</span>
+            </div>
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <span class="stat-label">Foydalanuvchilar</span>
+                <span class="stat-number">1</span>
+                <span class="stat-trend">admin</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batafsil statistika -->
+    <div class="stats-detailed">
+        <div class="chart-container">
+            <h2>📈 So'zlar statistikasi</h2>
+            <div class="chart-grid">
+                <div class="chart-item">
+                    <div class="chart-header">
+                        <span class="chart-title">Kategoriyalar bo'yicha</span>
+                        <span class="chart-value">{{ categories_count }} ta</span>
+                    </div>
+                    <div class="progress-bars">
+                        {% for cat in category_stats %}
+                        <div class="progress-item">
+                            <div class="progress-label">
+                                <span class="cat-name">
+                                    {% if cat.name == "ot" %}
+                                        🏠 Ot
+                                    {% elif cat.name == "sifat" %}
+                                        🎨 Sifat
+                                    {% elif cat.name == "fe'l" %}
+                                        ⚡ Fe'l
+                                    {% elif cat.name == "ravish" %}
+                                        ⏱️ Ravish
+                                    {% else %}
+                                        📁 {{ cat.name|capitalize }}
+                                    {% endif %}
+                                </span>
+                                <span class="cat-count">{{ cat.count }}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ cat.percentage }}%;"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="chart-item">
+                    <div class="chart-header">
+                        <span class="chart-title">Oxirgi qo'shilgan so'zlar</span>
+                        <span class="chart-value">oxirgi 5 ta</span>
+                    </div>
+                    <div class="recent-words">
+                        {% for word in recent_words %}
+                        <div class="recent-word-item">
+                            <span class="word-name">{{ word.word }}</span>
+                            <span class="word-date">{{ word.created_at.strftime('%d.%m.%Y') }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kategoriyalar xaritasi -->
+        <div class="categories-map">
+            <h2>🗺️ Kategoriyalar xaritasi</h2>
+            <div class="map-grid">
+                {% for cat in category_stats %}
+                <div class="map-item" style="--percentage: {{ cat.percentage }}%;">
+                    <div class="map-circle">
+                        <svg viewBox="0 0 36 36" class="circular-chart">
+                            <path class="circle-bg"
+                                d="M18 2.0845
+                                a 15.9155 15.9155 0 0 1 0 31.831
+                                a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                stroke="#eee"
+                                stroke-width="3"/>
+                            <path class="circle"
+                                stroke-dasharray="{{ cat.percentage }}, 100"
+                                d="M18 2.0845
+                                a 15.9155 15.9155 0 0 1 0 31.831
+                                a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                stroke="#667eea"
+                                stroke-width="3"
+                                stroke-linecap="round"/>
+                        </svg>
+                        <div class="circle-content">
+                            <span class="circle-number">{{ cat.count }}</span>
+                        </div>
+                    </div>
+                    <div class="map-label">
+                        {% if cat.name == "ot" %}
+                            Ot
+                        {% elif cat.name == "sifat" %}
+                            Sifat
+                        {% elif cat.name == "fe'l" %}
+                            Fe'l
+                        {% elif cat.name == "ravish" %}
+                            Ravish
+                        {% else %}
+                            {{ cat.name|capitalize }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tezkor amallar -->
+    <div class="quick-actions">
+        <h2>⚡ Tezkor amallar</h2>
+        <div class="actions-grid">
+            <a href="{{ url_for('admin.add_word') }}" class="action-card">
+                <div class="action-icon">➕</div>
+                <div class="action-info">
+                    <h3>Yangi so'z qo'shish</h3>
+                    <p>Tezaurusga yangi so'z qo'shing</p>
+                </div>
+                <span class="action-arrow">→</span>
+            </a>
+
+            <a href="{{ url_for('admin.words') }}" class="action-card">
+                <div class="action-icon">📝</div>
+                <div class="action-info">
+                    <h3>So'zlarni tahrirlash</h3>
+                    <p>Mavjud so'zlarni o'zgartiring</p>
+                </div>
+                <span class="action-arrow">→</span>
+            </a>
+
+            <a href="{{ url_for('admin.categories') }}" class="action-card">
+                <div class="action-icon">🏷️</div>
+                <div class="action-info">
+                    <h3>Kategoriyalarni boshqarish</h3>
+                    <p>Kategoriyalarni tahrirlang</p>
+                </div>
+                <span class="action-arrow">→</span>
+            </a>
+
+            <a href="{{ url_for('admin.import_export') }}" class="action-card">
+                <div class="action-icon">📦</div>
+                <div class="action-info">
+                    <h3>Import/Export</h3>
+                    <p>JSON formatda ma'lumotlarni yuklash va yuklab olish</p>
+                </div>
+                <span class="action-arrow">→</span>
+            </a>
+
+            <a href="{{ url_for('admin.logout') }}" class="action-card logout">
+                <div class="action-icon">🚪</div>
+                <div class="action-info">
+                    <h3>Chiqish</h3>
+                    <p>Admin panelidan chiqish</p>
+                </div>
+                <span class="action-arrow">→</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-dashboard {
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    color: white;
+}
+
+.header-content h1 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.header-content p {
+    opacity: 0.9;
+    font-size: 1rem;
+}
+
+.header-date {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    border-radius: 15px;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+}
+
+.stat-card.primary { border-left: 4px solid #667eea; }
+.stat-card.success { border-left: 4px solid #48bb78; }
+.stat-card.warning { border-left: 4px solid #ecc94b; }
+.stat-card.info { border-left: 4px solid #4299e1; }
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-right: 1rem;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+    margin-bottom: 0.2rem;
+}
+
+.stat-trend {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    background: #f0f0f0;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.stat-trend.positive {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+/* Detailed Stats */
+.stats-detailed {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chart-container, .categories-map {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.chart-container h2, .categories-map h2 {
+    color: #333;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.chart-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+/* Progress Bars */
+.progress-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.progress-item {
+    width: 100%;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.cat-name {
+    color: #333;
+    font-weight: 500;
+}
+
+.cat-count {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Recent Words */
+.recent-words {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.recent-word-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem;
+    background: #f8f9ff;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.recent-word-item:hover {
+    background: #e0e7ff;
+    transform: translateX(5px);
+}
+
+.word-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.word-date {
+    color: #999;
+    font-size: 0.85rem;
+}
+
+/* Categories Map */
+.map-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.map-item {
+    text-align: center;
+}
+
+.map-circle {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 0.5rem;
+}
+
+.circular-chart {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.circle-bg {
+    stroke: #f0f0f0;
+}
+
+.circle {
+    stroke: #667eea;
+    transition: stroke-dasharray 0.3s ease;
+}
+
+.circle-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.circle-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.map-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 0.3rem;
+}
+
+/* Quick Actions */
+.quick-actions {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.quick-actions h2 {
+    color: #333;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.action-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9ff;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.action-card:hover {
+    background: white;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+}
+
+.action-card.logout:hover {
+    border-color: #f56565;
+}
+
+.action-icon {
+    font-size: 2rem;
+    margin-right: 1rem;
+}
+
+.action-info {
+    flex: 1;
+}
+
+.action-info h3 {
+    color: #333;
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+}
+
+.action-info p {
+    color: #999;
+    font-size: 0.8rem;
+}
+
+.action-arrow {
+    color: #667eea;
+    font-size: 1.2rem;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+}
+
+.action-card:hover .action-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.action-card.logout .action-arrow {
+    color: #f56565;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .stats-detailed {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .map-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

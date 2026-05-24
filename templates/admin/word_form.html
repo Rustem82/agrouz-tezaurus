@@ -1,0 +1,548 @@
+{% extends "base.html" %}
+
+{% block title %}{% if word %}So'zni tahrirlash{% else %}Yangi so'z qo'shish{% endif %} - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-form-container">
+    <div class="admin-form-header">
+        <h1>{% if word %}✏️ So'zni tahrirlash{% else %}➕ Yangi so'z qo'shish{% endif %}</h1>
+        <a href="{{ url_for('admin.words') }}" class="back-btn">← Orqaga</a>
+    </div>
+
+    <form method="POST" class="word-form" id="wordForm">
+        <!-- Asosiy ma'lumotlar -->
+        <div class="form-section">
+            <h2>📝 Asosiy ma'lumotlar</h2>
+            
+            <div class="form-group">
+                <label for="word">So'z <span class="required">*</span></label>
+                <input type="text" id="word" name="word" value="{{ word.word if word else '' }}" required 
+                       placeholder="Masalan: tuproq" class="form-control">
+                <small class="form-text">So'zni kichik harflarda yozing</small>
+            </div>
+
+            <div class="form-group">
+                <label for="definition">Ta'rif / Izoh <span class="required">*</span></label>
+                <textarea id="definition" name="definition" rows="5" required 
+                          class="form-control" placeholder="So'zning ma'nosi...">{{ word.definition if word else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="etymology">Etimologiyasi (kelib chiqishi)</label>
+                <textarea id="etymology" name="etymology" rows="3" 
+                          class="form-control" placeholder="So'zning kelib chiqishi haqida...">{{ word.etymology if word else '' }}</textarea>
+            </div>
+
+            <!-- Yangi: Ingliz tiliga tarjima -->
+            <div class="form-group">
+                <label for="translation_en">🇬🇧 Tarjimasi (ingliz tili)</label>
+                <input type="text" id="translation_en" name="translation_en"
+                       value="{{ word.translation_en if word else '' }}"
+                       class="form-control" placeholder="Masalan: soil">
+                <small class="form-text">So'zning ingliz tilidagi tarjimasi</small>
+            </div>
+        </div>
+
+        <!-- Turkumlar (kategoriyalar) -->
+        <div class="form-section">
+            <h2>🏷️ Turkumlar</h2>
+            <div class="form-group">
+                <label>So'z turkumi</label>
+                <div class="checkbox-group" id="categories-container">
+                    {% set categories = word.categories if word else [] %}
+                    {% for category in ['ot', 'sifat', 'fe\'l', 'ravish', 'olmosh', 'son', 'undov', 'taqlid', 'ko\'makchi', 'bog\'lovchi', 'yuklama'] %}
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="categories[]" value="{{ category }}" 
+                               {% if category in categories %}checked{% endif %}>
+                        {{ category }}
+                    </label>
+                    {% endfor %}
+                </div>
+                <small class="form-text">Bir nechta turkumni tanlash mumkin</small>
+            </div>
+        </div>
+
+        <!-- Sinonimlar -->
+        <div class="form-section">
+            <h2>🔄 Sinonimlari (ma'nodoshlari)</h2>
+            <div class="dynamic-fields" id="synonyms-container">
+                {% if word and word.synonyms %}
+                    {% for syn in word.synonyms %}
+                    <div class="dynamic-field">
+                        <input type="text" name="synonyms[]" value="{{ syn }}" class="form-control" placeholder="Sinonim">
+                        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="dynamic-field">
+                    <input type="text" name="synonyms[]" class="form-control" placeholder="Sinonim">
+                    <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="add-field-btn" onclick="addField('synonyms-container')">+ Sinonim qo'shish</button>
+        </div>
+
+        <!-- Antonimlar -->
+        <div class="form-section">
+            <h2>⚔️ Antonimlari (zid ma'nodosh)</h2>
+            <div class="dynamic-fields" id="antonyms-container">
+                {% if word and word.antonyms %}
+                    {% for ant in word.antonyms %}
+                    <div class="dynamic-field">
+                        <input type="text" name="antonyms[]" value="{{ ant }}" class="form-control" placeholder="Antonim">
+                        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="dynamic-field">
+                    <input type="text" name="antonyms[]" class="form-control" placeholder="Antonim">
+                    <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="add-field-btn" onclick="addField('antonyms-container')">+ Antonim qo'shish</button>
+        </div>
+
+        <!-- Giperonimlar -->
+        <div class="form-section">
+            <h2>⬆️ Giperonimlari (umumiy tushunchalar)</h2>
+            <div class="dynamic-fields" id="hyperonyms-container">
+                {% if word and word.hyperonyms %}
+                    {% for hyp in word.hyperonyms %}
+                    <div class="dynamic-field">
+                        <input type="text" name="hyperonyms[]" value="{{ hyp }}" class="form-control" placeholder="Giperonim">
+                        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="dynamic-field">
+                    <input type="text" name="hyperonyms[]" class="form-control" placeholder="Giperonim">
+                    <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="add-field-btn" onclick="addField('hyperonyms-container')">+ Giperonim qo'shish</button>
+        </div>
+
+        <!-- Giponimlar -->
+        <div class="form-section">
+            <h2>⬇️ Giponimlari (xususiy tushunchalar)</h2>
+            <div class="dynamic-fields" id="hyponyms-container">
+                {% if word and word.hyponyms %}
+                    {% for hypo in word.hyponyms %}
+                    <div class="dynamic-field">
+                        <input type="text" name="hyponyms[]" value="{{ hypo }}" class="form-control" placeholder="Giponim">
+                        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="dynamic-field">
+                    <input type="text" name="hyponyms[]" class="form-control" placeholder="Giponim">
+                    <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="add-field-btn" onclick="addField('hyponyms-container')">+ Giponim qo'shish</button>
+        </div>
+
+        <!-- Holonimlar -->
+        <div class="form-section">
+            <h2>🔗 Holonimlari (tarkibidagi butun)</h2>
+            <div class="dynamic-fields" id="holonyms-container">
+                {% if word and word.holonyms %}
+                    {% for hol in word.holonyms %}
+                    <div class="dynamic-field">
+                        <input type="text" name="holonyms[]" value="{{ hol }}" class="form-control" placeholder="Holonim">
+                        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="dynamic-field">
+                    <input type="text" name="holonyms[]" class="form-control" placeholder="Holonim">
+                    <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="add-field-btn" onclick="addField('holonyms-container')">+ Holonim qo'shish</button>
+        </div>
+
+        <!-- Meronimlar -->
+        <div class="form-section">
+            <h2>🧩 Meronimlari (tarkibiy qismlari)</h2>
+            <div class="dynamic-fields" id="meronyms-container">
+                {% if word and word.meronyms %}
+                    {% for mer in word.meronyms %}
+                    <div class="dynamic-field">
+                        <input type="text" name="meronyms[]" value="{{ mer }}" class="form-control" placeholder="Meronim">
+                        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="dynamic-field">
+                    <input type="text" name="meronyms[]" class="form-control" placeholder="Meronim">
+                    <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="add-field-btn" onclick="addField('meronyms-container')">+ Meronim qo'shish</button>
+        </div>
+
+        <!-- Omonimlar -->
+        <div class="form-section">
+            <h2>🔤 Omonimlari (shakldosh so'zlar)</h2>
+            <div class="dynamic-fields" id="homonyms-container">
+                {% if word and word.homonyms %}
+                    {% for hom in word.homonyms %}
+                    <div class="dynamic-field">
+                        <input type="text" name="homonyms[]" value="{{ hom }}" class="form-control" placeholder="Omonim">
+                        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="dynamic-field">
+                    <input type="text" name="homonyms[]" class="form-control" placeholder="Omonim">
+                    <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="add-field-btn" onclick="addField('homonyms-container')">+ Omonim qo'shish</button>
+        </div>
+
+        <!-- Paronimlar -->
+        <div class="form-section">
+            <h2>🎤 Paronimlari (talaffuzdosh so'zlar)</h2>
+            <div class="dynamic-fields" id="paronyms-container">
+                {% if word and word.paronyms %}
+                    {% for par in word.paronyms %}
+                    <div class="dynamic-field">
+                        <input type="text" name="paronyms[]" value="{{ par }}" class="form-control" placeholder="Paronim">
+                        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="dynamic-field">
+                    <input type="text" name="paronyms[]" class="form-control" placeholder="Paronim">
+                    <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="add-field-btn" onclick="addField('paronyms-container')">+ Paronim qo'shish</button>
+        </div>
+
+        <!-- Qo'llanilish sohasi -->
+        <div class="form-section">
+            <h2>🏷️ Qo'llanilish sohasi</h2>
+            <div class="dynamic-fields" id="usage-areas-container">
+                {% if word and word.usage_areas %}
+                    {% for area in word.usage_areas %}
+                    <div class="dynamic-field">
+                        <input type="text" name="usage_areas[]" value="{{ area }}" class="form-control" placeholder="Masalan: geologiya">
+                        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="dynamic-field">
+                    <input type="text" name="usage_areas[]" class="form-control" placeholder="Masalan: geologiya">
+                    <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="add-field-btn" onclick="addField('usage-areas-container')">+ Soha qo'shish</button>
+        </div>
+
+        <!-- Tugmalar -->
+        <div class="form-actions">
+            <button type="submit" class="save-btn">
+                {% if word %}💾 So'zni yangilash{% else %}💾 So'zni qo'shish{% endif %}
+            </button>
+            <a href="{{ url_for('admin.words') }}" class="cancel-btn">Bekor qilish</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.admin-form-container {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.admin-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.admin-form-header h1 {
+    color: #667eea;
+    font-size: 1.8rem;
+}
+
+.back-btn {
+    padding: 0.5rem 1.2rem;
+    background: #f0f0f0;
+    color: #666;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.back-btn:hover {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.form-section {
+    background: #f8f9ff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+}
+
+.form-section h2 {
+    color: #333;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    padding-left: 0.5rem;
+    border-left: 4px solid #667eea;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.required {
+    color: #e53e3e;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-text {
+    display: block;
+    margin-top: 0.3rem;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: #333;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.dynamic-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.dynamic-field {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.dynamic-field .form-control {
+    flex: 1;
+}
+
+.remove-field-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: #fee2e2;
+    color: #ef4444;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.remove-field-btn:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.add-field-btn {
+    padding: 0.6rem 1.2rem;
+    background: #e5e7eb;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.add-field-btn:hover {
+    background: #667eea;
+    color: white;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #f0f0f0;
+}
+
+.save-btn {
+    padding: 0.8rem 2rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.save-btn:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.cancel-btn {
+    padding: 0.8rem 2rem;
+    background: #e5e7eb;
+    color: #666;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.cancel-btn:hover {
+    background: #d1d5db;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .admin-form-container {
+        padding: 1rem;
+    }
+    
+    .admin-form-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .form-section {
+        padding: 1rem;
+    }
+    
+    .checkbox-group {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .save-btn, .cancel-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+function addField(containerId) {
+    const container = document.getElementById(containerId);
+    const newField = document.createElement('div');
+    newField.className = 'dynamic-field';
+    newField.innerHTML = `
+        <input type="text" name="${containerId.replace('-container', '[]')}" class="form-control" placeholder="Yangi qiymat">
+        <button type="button" class="remove-field-btn" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(newField);
+}
+
+// Formani yuborishdan oldin tekshirish
+document.getElementById('wordForm')?.addEventListener('submit', function(e) {
+    const wordInput = document.getElementById('word');
+    if (!wordInput.value.trim()) {
+        e.preventDefault();
+        alert('Iltimos, so\'zni kiriting!');
+        wordInput.focus();
+        return;
+    }
+    
+    const definitionInput = document.getElementById('definition');
+    if (!definitionInput.value.trim()) {
+        e.preventDefault();
+        alert('Iltimos, ta\'rifni kiriting!');
+        definitionInput.focus();
+        return;
+    }
+});
+
+// Avtomatik to'ldirish uchun (ixtiyoriy)
+document.addEventListener('DOMContentLoaded', function() {
+    // Mavjud bo'sh maydonlarni olib tashlash (agar kerak bo'lsa)
+    const containers = document.querySelectorAll('.dynamic-fields');
+    containers.forEach(container => {
+        const fields = container.querySelectorAll('.dynamic-field');
+        if (fields.length === 1) {
+            const input = fields[0].querySelector('input');
+            if (!input.value) {
+                // Bitta bo'sh maydon qoldiriladi
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
