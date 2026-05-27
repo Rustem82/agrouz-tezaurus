@@ -8,10 +8,24 @@
         <h1>{{ word }}</h1>
         <div class="word-badges">
             {% if data.turkumi %}
-                <span class="badge">{{ data.turkumi|join(', ') }}</span>
+                {# Убираем дубликаты с помощью set #}
+                {% set unique_categories = [] %}
+                {% for cat in data.turkumi %}
+                    {% if cat not in unique_categories %}
+                        {% set _ = unique_categories.append(cat) %}
+                    {% endif %}
+                {% endfor %}
+                <span class="badge">{{ unique_categories|join(', ') }}</span>
             {% endif %}
             {% if data.termin_tarkibi %}
-                <span class="badge">{{ data.termin_tarkibi|join(', ') }}</span>
+                {# Убираем дубликаты и для termin_tarkibi #}
+                {% set unique_terms = [] %}
+                {% for term in data.termin_tarkibi %}
+                    {% if term not in unique_terms %}
+                        {% set _ = unique_terms.append(term) %}
+                    {% endif %}
+                {% endfor %}
+                <span class="badge">{{ unique_terms|join(', ') }}</span>
             {% endif %}
         </div>
     </div>
