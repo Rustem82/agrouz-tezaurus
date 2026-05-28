@@ -9,6 +9,37 @@ from datetime import datetime
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 
+# ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ЗАЩИТЫ ОТ ДУБЛИКАТОВ ==========
+
+def add_unique_relation(word_id, relation_model, value, value_field='related_word'):
+    """Добавляет связь только если она еще не существует"""
+    if not value or not value.strip():
+        return
+
+    value = value.strip()
+
+    # Проверяем, существует ли уже такая связь
+    existing = relation_model.query.filter_by(
+        word_id=word_id,
+        **{value_field: value}
+    ).first()
+
+    if not existing:
+        db.session.add(relation_model(word_id=word_id, **{value_field: value}))
+
+
+def add_unique_categories(word_id, categories):
+    """Добавляет категории без дубликатов"""
+    added = set()
+    for cat in categories:
+        cat = cat.strip()
+        if cat and cat not in added:
+            added.add(cat)
+            existing = WordCategory.query.filter_by(word_id=word_id, category=cat).first()
+            if not existing:
+                db.session.add(WordCategory(word_id=word_id, category=cat))
+
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -118,80 +149,49 @@ def add_word():
             word=word_text,
             definition=request.form.get('definition', ''),
             etymology=request.form.get('etymology', ''),
-            translation_en = request.form.get('translation_en', '') # <--- YANGI
+            translation_en=request.form.get('translation_en', '')
         )
         db.session.add(word)
         db.session.flush()  # ID olish uchun
 
-        # Kategoriyalar
-        categories = request.form.getlist('categories[]')
-        for cat in categories:
-            if cat.strip():
-                word_category = WordCategory(word_id=word.id, category=cat.strip())
-                db.session.add(word_category)
+        # Kategoriyalar - YANGI (без дубликатов)
+        add_unique_categories(word.id, request.form.getlist('categories[]'))
 
-        # Sinonimlar
-        synonyms = request.form.getlist('synonyms[]')
-        for syn in synonyms:
-            if syn.strip():
-                word_syn = WordSynonym(word_id=word.id, related_word=syn.strip())
-                db.session.add(word_syn)
+        # Sinonimlar - YANGI (без дубликатов)
+        for syn in request.form.getlist('synonyms[]'):
+            add_unique_relation(word.id, WordSynonym, syn)
 
-        # Antonimlar
-        antonyms = request.form.getlist('antonyms[]')
-        for ant in antonyms:
-            if ant.strip():
-                word_ant = WordAntonym(word_id=word.id, related_word=ant.strip())
-                db.session.add(word_ant)
+        # Antonimlar - YANGI
+        for ant in request.form.getlist('antonyms[]'):
+            add_unique_relation(word.id, WordAntonym, ant)
 
-        # Giperonimlar
-        hyperonyms = request.form.getlist('hyperonyms[]')
-        for hyp in hyperonyms:
-            if hyp.strip():
-                word_hyp = WordHyperonym(word_id=word.id, related_word=hyp.strip())
-                db.session.add(word_hyp)
+        # Giperonimlar - YANGI
+        for hyp in request.form.getlist('hyperonyms[]'):
+            add_unique_relation(word.id, WordHyperonym, hyp)
 
-        # Giponimlar
-        hyponyms = request.form.getlist('hyponyms[]')
-        for hypo in hyponyms:
-            if hypo.strip():
-                word_hypo = WordHyponym(word_id=word.id, related_word=hypo.strip())
-                db.session.add(word_hypo)
+        # Giponimlar - YANGI
+        for hypo in request.form.getlist('hyponyms[]'):
+            add_unique_relation(word.id, WordHyponym, hypo)
 
-        # Xolonimlar
-        holonyms = request.form.getlist('holonyms[]')
-        for hol in holonyms:
-            if hol.strip():
-                word_hol = WordHolonym(word_id=word.id, related_word=hol.strip())
-                db.session.add(word_hol)
+        # Xolonimlar - YANGI
+        for hol in request.form.getlist('holonyms[]'):
+            add_unique_relation(word.id, WordHolonym, hol)
 
-        # Meronimlar
-        meronyms = request.form.getlist('meronyms[]')
-        for mer in meronyms:
-            if mer.strip():
-                word_mer = WordMeronym(word_id=word.id, related_word=mer.strip())
-                db.session.add(word_mer)
+        # Meronimlar - YANGI
+        for mer in request.form.getlist('meronyms[]'):
+            add_unique_relation(word.id, WordMeronym, mer)
 
-        # Omonimlar
-        homonyms = request.form.getlist('homonyms[]')
-        for hom in homonyms:
-            if hom.strip():
-                word_hom = WordHomonym(word_id=word.id, related_word=hom.strip())
-                db.session.add(word_hom)
+        # Omonimlar - YANGI
+        for hom in request.form.getlist('homonyms[]'):
+            add_unique_relation(word.id, WordHomonym, hom)
 
-        # Paronimlar
-        paronyms = request.form.getlist('paronyms[]')
-        for par in paronyms:
-            if par.strip():
-                word_par = WordParonym(word_id=word.id, related_word=par.strip())
-                db.session.add(word_par)
+        # Paronimlar - YANGI
+        for par in request.form.getlist('paronyms[]'):
+            add_unique_relation(word.id, WordParonym, par)
 
-        # Qo'llanish sohalari
-        usage_areas = request.form.getlist('usage_areas[]')
-        for area in usage_areas:
-            if area.strip():
-                word_area = WordUsageArea(word_id=word.id, area=area.strip())
-                db.session.add(word_area)
+        # Qo'llanish sohalari - YANGI
+        for area in request.form.getlist('usage_areas[]'):
+            add_unique_relation(word.id, WordUsageArea, area, 'area')
 
         db.session.commit()
         flash(f'So\'z "{word_text}" muvaffaqiyatli qo\'shildi', 'success')
@@ -209,7 +209,7 @@ def edit_word(word_id):
         word.word = request.form.get('word', '').strip().lower()
         word.definition = request.form.get('definition', '')
         word.etymology = request.form.get('etymology', '')
-        word.translation_en = request.form.get('translation_en', '')  # <--- YANGI
+        word.translation_en = request.form.get('translation_en', '')
 
         # Eski bog'lanishlarni o'chirish
         WordCategory.query.filter_by(word_id=word.id).delete()
@@ -223,46 +223,46 @@ def edit_word(word_id):
         WordParonym.query.filter_by(word_id=word.id).delete()
         WordUsageArea.query.filter_by(word_id=word.id).delete()
 
-        # Yangi bog'lanishlar qo'shish
-        for cat in request.form.getlist('categories[]'):
-            if cat.strip():
-                db.session.add(WordCategory(word_id=word.id, category=cat.strip()))
+        # Yangi bog'lanishlar qo'shish (без дубликатов)
 
+        # Kategoriyalar
+        add_unique_categories(word.id, request.form.getlist('categories[]'))
+
+        # Sinonimlar
         for syn in request.form.getlist('synonyms[]'):
-            if syn.strip():
-                db.session.add(WordSynonym(word_id=word.id, related_word=syn.strip()))
+            add_unique_relation(word.id, WordSynonym, syn)
 
+        # Antonimlar
         for ant in request.form.getlist('antonyms[]'):
-            if ant.strip():
-                db.session.add(WordAntonym(word_id=word.id, related_word=ant.strip()))
+            add_unique_relation(word.id, WordAntonym, ant)
 
+        # Giperonimlar
         for hyp in request.form.getlist('hyperonyms[]'):
-            if hyp.strip():
-                db.session.add(WordHyperonym(word_id=word.id, related_word=hyp.strip()))
+            add_unique_relation(word.id, WordHyperonym, hyp)
 
+        # Giponimlar
         for hypo in request.form.getlist('hyponyms[]'):
-            if hypo.strip():
-                db.session.add(WordHyponym(word_id=word.id, related_word=hypo.strip()))
+            add_unique_relation(word.id, WordHyponym, hypo)
 
+        # Xolonimlar
         for hol in request.form.getlist('holonyms[]'):
-            if hol.strip():
-                db.session.add(WordHolonym(word_id=word.id, related_word=hol.strip()))
+            add_unique_relation(word.id, WordHolonym, hol)
 
+        # Meronimlar
         for mer in request.form.getlist('meronyms[]'):
-            if mer.strip():
-                db.session.add(WordMeronym(word_id=word.id, related_word=mer.strip()))
+            add_unique_relation(word.id, WordMeronym, mer)
 
+        # Omonimlar
         for hom in request.form.getlist('homonyms[]'):
-            if hom.strip():
-                db.session.add(WordHomonym(word_id=word.id, related_word=hom.strip()))
+            add_unique_relation(word.id, WordHomonym, hom)
 
+        # Paronimlar
         for par in request.form.getlist('paronyms[]'):
-            if par.strip():
-                db.session.add(WordParonym(word_id=word.id, related_word=par.strip()))
+            add_unique_relation(word.id, WordParonym, par)
 
+        # Qo'llanish sohalari
         for area in request.form.getlist('usage_areas[]'):
-            if area.strip():
-                db.session.add(WordUsageArea(word_id=word.id, area=area.strip()))
+            add_unique_relation(word.id, WordUsageArea, area, 'area')
 
         db.session.commit()
         flash(f'So\'z "{word.word}" muvaffaqiyatli yangilandi', 'success')
@@ -274,6 +274,7 @@ def edit_word(word_id):
         'word': word.word,
         'definition': word.definition,
         'etymology': word.etymology,
+        'translation_en': word.translation_en,
         'categories': [cat.category for cat in word.categories],
         'synonyms': [syn.related_word for syn in word.synonyms],
         'antonyms': [ant.related_word for ant in word.antonyms],
@@ -443,6 +444,7 @@ def export_json():
             'word': word.word,
             'definition': word.definition,
             'etymology': word.etymology,
+            'translation_en': word.translation_en,
             'categories': [cat.category for cat in word.categories],
             'synonyms': [syn.related_word for syn in word.synonyms],
             'antonyms': [ant.related_word for ant in word.antonyms],
@@ -551,95 +553,139 @@ def import_json():
                 db.session.add(word)
                 db.session.flush()
 
-                # Kategoriya (turkumi)
+                # Kategoriya (turkumi) - с защитой от дубликатов
                 turkum = item.get('turkumi', '')
                 if turkum:
+                    added_cats = set()
                     for cat in str(turkum).split(','):
                         cat = cat.strip()
-                        if cat:
-                            db.session.add(WordCategory(word_id=word.id, category=cat))
+                        if cat and cat not in added_cats:
+                            added_cats.add(cat)
+                            existing_cat = WordCategory.query.filter_by(word_id=word.id, category=cat).first()
+                            if not existing_cat:
+                                db.session.add(WordCategory(word_id=word.id, category=cat))
 
-                # Sinonimlar
+                # Sinonimlar - с защитой от дубликатов
                 sinonim = item.get('sinonimi (ma\'nodoshi)', '')
                 if not sinonim:
                     sinonim = item.get('sinonimi', '')
                 if sinonim:
+                    added_syns = set()
                     for syn in str(sinonim).split(','):
                         syn = syn.strip()
                         if syn and syn.lower() not in ['yo\'q', 'yoq', 'нет', 'none', '', '-', '—']:
-                            db.session.add(WordSynonym(word_id=word.id, related_word=syn))
+                            if syn not in added_syns:
+                                added_syns.add(syn)
+                                existing_syn = WordSynonym.query.filter_by(word_id=word.id, related_word=syn).first()
+                                if not existing_syn:
+                                    db.session.add(WordSynonym(word_id=word.id, related_word=syn))
 
-                # Antonimlar
+                # Antonimlar - с защитой от дубликатов
                 antonim = item.get('antonimi (zid ma\'nosi)', '')
                 if not antonim:
                     antonim = item.get('antonimi', '')
                 if antonim:
+                    added_ants = set()
                     for ant in str(antonim).split(','):
                         ant = ant.strip()
                         if ant and ant.lower() not in ['yo\'q', 'yoq', 'нет', 'none', '', '-', '—']:
-                            db.session.add(WordAntonym(word_id=word.id, related_word=ant))
+                            if ant not in added_ants:
+                                added_ants.add(ant)
+                                existing_ant = WordAntonym.query.filter_by(word_id=word.id, related_word=ant).first()
+                                if not existing_ant:
+                                    db.session.add(WordAntonym(word_id=word.id, related_word=ant))
 
-                # Giperonimlar
+                # Giperonimlar - с защитой от дубликатов
                 giperonim = item.get('giperonimi (jins)', '')
                 if not giperonim:
                     giperonim = item.get('giperonimi', '')
                 if giperonim:
+                    added_hyps = set()
                     for hyp in str(giperonim).split(','):
                         hyp = hyp.strip()
                         if hyp and hyp.lower() not in ['yo\'q', 'yoq', 'нет', 'none', '']:
-                            db.session.add(WordHyperonym(word_id=word.id, related_word=hyp))
+                            if hyp not in added_hyps:
+                                added_hyps.add(hyp)
+                                existing_hyp = WordHyperonym.query.filter_by(word_id=word.id, related_word=hyp).first()
+                                if not existing_hyp:
+                                    db.session.add(WordHyperonym(word_id=word.id, related_word=hyp))
 
-                # Giponimlar
+                # Giponimlar - с защитой от дубликатов
                 giponim = item.get('giponimi (tur)', '')
                 if not giponim:
                     giponim = item.get('giponimi', '')
                 if giponim:
+                    added_hypos = set()
                     for hypo in str(giponim).split(','):
                         hypo = hypo.strip()
                         if hypo and hypo.lower() not in ['yo\'q', 'yoq', 'нет', 'none', '']:
-                            db.session.add(WordHyponym(word_id=word.id, related_word=hypo))
+                            if hypo not in added_hypos:
+                                added_hypos.add(hypo)
+                                existing_hypo = WordHyponym.query.filter_by(word_id=word.id, related_word=hypo).first()
+                                if not existing_hypo:
+                                    db.session.add(WordHyponym(word_id=word.id, related_word=hypo))
 
-                # Xolonimlar
+                # Xolonimlar - с защитой от дубликатов
                 xolonim = item.get('xolonim (butun)i', '')
                 if not xolonim:
                     xolonim = item.get('xolonim', '')
                 if xolonim:
+                    added_hols = set()
                     for hol in str(xolonim).split(','):
                         hol = hol.strip()
                         if hol and hol.lower() not in ['yo\'q', 'yoq', 'нет', 'none', '']:
-                            db.session.add(WordHolonym(word_id=word.id, related_word=hol))
+                            if hol not in added_hols:
+                                added_hols.add(hol)
+                                existing_hol = WordHolonym.query.filter_by(word_id=word.id, related_word=hol).first()
+                                if not existing_hol:
+                                    db.session.add(WordHolonym(word_id=word.id, related_word=hol))
 
-                # Meronimlar
+                # Meronimlar - с защитой от дубликатов
                 meronim = item.get('meronimi (qismi)', '')
                 if not meronim:
                     meronim = item.get('meronim', '')
                 if meronim:
+                    added_mers = set()
                     for mer in str(meronim).split(','):
                         mer = mer.strip()
                         if mer and mer.lower() not in ['yo\'q', 'yoq', 'нет', 'none', '']:
-                            db.session.add(WordMeronym(word_id=word.id, related_word=mer))
+                            if mer not in added_mers:
+                                added_mers.add(mer)
+                                existing_mer = WordMeronym.query.filter_by(word_id=word.id, related_word=mer).first()
+                                if not existing_mer:
+                                    db.session.add(WordMeronym(word_id=word.id, related_word=mer))
 
-                # Omonimlar
+                # Omonimlar - с защитой от дубликатов
                 omonim = item.get('omonimi (shakldoshi)', '')
                 if not omonim:
                     omonim = item.get('omonim', '')
                 if omonim and omonim not in [None, 'null', 'None', '']:
+                    added_homs = set()
                     for hom in str(omonim).split(','):
                         hom = hom.strip()
                         if hom and hom.lower() not in ['yo\'q', 'yoq', 'нет', 'none', 'null', '']:
-                            db.session.add(WordHomonym(word_id=word.id, related_word=hom))
+                            if hom not in added_homs:
+                                added_homs.add(hom)
+                                existing_hom = WordHomonym.query.filter_by(word_id=word.id, related_word=hom).first()
+                                if not existing_hom:
+                                    db.session.add(WordHomonym(word_id=word.id, related_word=hom))
 
-                # Paronimlar
+                # Paronimlar - с защитой от дубликатов
                 paronim = item.get('paronimi (talaffuzdoshi)', '')
                 if not paronim:
                     paronim = item.get('paronim', '')
                 if paronim and paronim not in [None, 'null', 'None', '']:
+                    added_pars = set()
                     for par in str(paronim).split(','):
                         par = par.strip()
                         if par and par.lower() not in ['yo\'q', 'yoq', 'нет', 'none', 'null', '']:
-                            db.session.add(WordParonym(word_id=word.id, related_word=par))
+                            if par not in added_pars:
+                                added_pars.add(par)
+                                existing_par = WordParonym.query.filter_by(word_id=word.id, related_word=par).first()
+                                if not existing_par:
+                                    db.session.add(WordParonym(word_id=word.id, related_word=par))
 
-                # Qo'llanilish sohalari
+                # Qo'llanilish sohalari - с защитой от дубликатов
                 usage = ''
                 usage_keys = ['qaysi sohada qo\'llanilishi', 'qaysi sohada qollanilishi',
                               'qollanilishi', 'usage_areas', 'qollanilish_sohasi', 'qaysi sohada qo‘llanilishi']
@@ -650,10 +696,15 @@ def import_json():
                         break
 
                 if usage and str(usage).strip():
+                    added_areas = set()
                     for area in str(usage).split(','):
                         area = area.strip()
                         if area and area.lower() not in ['yo\'q', 'yoq', 'нет', 'none', '', '-', '—', 'null']:
-                            db.session.add(WordUsageArea(word_id=word.id, area=area))
+                            if area not in added_areas:
+                                added_areas.add(area)
+                                existing_area = WordUsageArea.query.filter_by(word_id=word.id, area=area).first()
+                                if not existing_area:
+                                    db.session.add(WordUsageArea(word_id=word.id, area=area))
 
                 imported_count += 1
 
@@ -696,6 +747,7 @@ def import_json():
 
     return redirect(url_for('admin.import_export'))
 
+
 @admin_bp.route('/api/words/search')
 def api_words_search():
     """API so'zlarni qidirish uchun"""
@@ -725,6 +777,7 @@ def create_admin():
         print('✅ Admin created: username=admin, password=admin123')
     else:
         print('✅ Admin already exists')
+
 
 @admin_bp.route('/categories/edit-ajax', methods=['POST'])
 @admin_required
