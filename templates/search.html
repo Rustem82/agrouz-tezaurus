@@ -28,7 +28,7 @@
                 </div>
                 <div class="results-list" id="searchResultsList">
                     {% for result in results %}
-                    <div class="result-item {% if loop.first %}active{% endif %}" data-word="{{ result.word }}" id="result-{{ result.word|replace(' ', '-') }}">
+                    <div class="result-item {% if loop.first %}active{% endif %}" data-word="{{ result.word }}" id="result-{{ result.word|replace(' ', '-')|replace('(', '')|replace(')', '') }}">
                         <a href="{{ url_for('word_detail', word=result.word) }}" class="result-link">
                             <div class="result-header">
                                 <h3>{{ result.word }}</h3>
@@ -43,8 +43,7 @@
                                 </div>
                             {% endif %}
                         </a>
-                        <!-- Кнопка для показа семантической сети -->
-                        <button class="semantic-btn" onclick="showSemanticNetwork('{{ result.word }}')">
+                        <button class="semantic-btn" onclick="showSemanticNetwork('{{ result.word|replace("'", "\\'") }}')">
                             <span class="semantic-icon">🕸️</span>
                             Semantik tarmoq
                         </button>
@@ -115,10 +114,10 @@
                 <h3>Mumkin bo'lgan so'zlar:</h3>
                 <div class="suggestion-links">
                     <a href="{{ url_for('search') }}?q=tuproq">tuproq</a>
-                    <a href="{{ url_for('search') }}?q=uy">uy</a>
-                    <a href="{{ url_for('search') }}?q=quvonch">quvonch</a>
-                    <a href="{{ url_for('search') }}?q=tez">tez</a>
-                    <a href="{{ url_for('search') }}?q=chiroyli">chiroyli</a>
+                    <a href="{{ url_for('search') }}?q=yer">yer</a>
+                    <a href="{{ url_for('search') }}?q=suv">suv</a>
+                    <a href="{{ url_for('search') }}?q=hosil">hosil</a>
+                    <a href="{{ url_for('search') }}?q=ekin">ekin</a>
                 </div>
             </div>
         </div>
@@ -285,6 +284,7 @@
     align-items: center;
     gap: 0.8rem;
     margin-bottom: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .result-badge {
@@ -573,21 +573,18 @@ function showSemanticNetwork(word) {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                // Если слово не найдено, создаем минимальную сеть с одним узлом
                 createMinimalNetwork(word);
             } else {
-                // Всегда рисуем сеть, даже если там только один узел
                 drawSemanticNetwork(data);
             }
         })
         .catch(error => {
             console.error('Error loading semantic network:', error);
-            // При ошибке создаем минимальную сеть
             createMinimalNetwork(word);
         });
 }
 
-// Функция для создания минимальной сети (всегда показывает узел)
+// Функция для создания минимальной сети
 function createMinimalNetwork(word) {
     const minimalData = {
         focus: word,
@@ -599,44 +596,14 @@ function createMinimalNetwork(word) {
     drawSemanticNetwork(minimalData);
 }
 
-// Функция для загрузки деталей слова
-function loadWordDetails(word) {
-    fetch(`/api/word-details/${encodeURIComponent(word)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (!data.error) {
-                updateResultInList(word, data);
-            }
-        })
-        .catch(error => console.error('Error loading word details:', error));
-}
-
-// Функция для обновления результата в списке
-function updateResultInList(word, data) {
-    let resultItem = document.getElementById(`result-${word.replace(/ /g, '-')}`);
-
-    if (resultItem) {
-        const badgeEl = resultItem.querySelector('.result-badge');
-        const definitionEl = resultItem.querySelector('.result-definition');
-        const synonymsEl = resultItem.querySelector('.result-synonyms small');
-
-        if (badgeEl) badgeEl.textContent = data.turkum || 'no-malum';
-        if (definitionEl) {
-            definitionEl.textContent = data.definition || 'Ta\'rif mavjud emas';
-        }
-        if (synonymsEl && data.sinonimlar && data.sinonimlar.length) {
-            synonymsEl.textContent = `Sinonimlar: ${data.sinonimlar.join(', ')}`;
-        }
-    }
-}
-
 // Функция для подсветки активного результата
 function highlightResult(word) {
     document.querySelectorAll('.result-item').forEach(item => {
         item.classList.remove('active');
     });
 
-    const activeResult = document.getElementById(`result-${word.replace(/ /g, '-')}`);
+    const safeWord = word.replace(/ /g, '-').replace(/\(/g, '').replace(/\)/g, '');
+    const activeResult = document.getElementById(`result-${safeWord}`);
     if (activeResult) {
         activeResult.classList.add('active');
         activeResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -890,7 +857,7 @@ function drawSemanticNetwork(data) {
     // Центрируем на фокусном слове
     setTimeout(() => {
         const focusNode = data.nodes.find(n => n.id === data.focus);
-        if (focusNode) {
+        if (focusNode && focusNode.x) {
             const transform = d3.zoomIdentity
                 .translate(width / 2 - focusNode.x, height / 2 - focusNode.y)
                 .scale(1);
@@ -926,6 +893,14 @@ document.getElementById('mainSearchInput')?.addEventListener('keypress', functio
     if (e.key === 'Enter') {
         e.preventDefault();
         this.form.submit();
+    }
+});
+
+// Обработка кликов на suggestion-item (из base.html)
+document.addEventListener('click', function(e) {
+    if (e.target.classList && e.target.classList.contains('suggestion-item')) {
+        const word = e.target.textContent;
+        window.location.href = `/word/${encodeURIComponent(word)}`;
     }
 });
 </script>
