@@ -62,42 +62,31 @@ def search():
 
     if query:
         try:
-            # Проверка на поиск по категории
-            if query.startswith('category:'):
-                category_name = query.replace('category:', '').strip()
-                word_ids = WordCategory.query.filter_by(category=category_name).all()
-                word_ids = [wc.word_id for wc in word_ids]
-                words = Word.query.filter(Word.id.in_(word_ids)).all()
-            else:
-                # Обычный поиск
-                words = Word.query.filter(Word.word.ilike(f'%{query.lower()}%')).all()
+            # Поиск без дополнительных фильтров
+            words = Word.query.filter(
+                Word.word.ilike(f'%{query.lower()}%'),
+                ~Word.word.startswith('_category_placeholder_')  # Только это фильтр
+            ).all()
 
-                # Сортировка
-                def sort_words(word_obj):
-                    word_lower = word_obj.word.lower()
-                    query_lower = query.lower()
-                    if word_lower == query_lower:
-                        return (0, word_lower)
-                    elif word_lower.startswith(query_lower):
-                        return (1, word_lower)
-                    else:
-                        return (2, word_lower)
+            # Сортировка
+            def sort_words(word_obj):
+                word_lower = word_obj.word.lower()
+                query_lower = query.lower()
+                if word_lower == query_lower:
+                    return (0, word_lower)
+                elif word_lower.startswith(query_lower):
+                    return (1, word_lower)
+                else:
+                    return (2, word_lower)
 
-                words = sorted(words, key=sort_words)
+            words = sorted(words, key=sort_words)
 
-            # Формируем результаты
             for word in words:
-                if word.word.startswith('_category_placeholder_'):
-                    continue
-
-                # Получаем уникальные категории (без дубликатов)
-                unique_categories = list(set([cat.category for cat in word.categories]))
-
                 results.append({
                     'word': word.word,
                     'definition': word.definition[:200] + '...' if len(word.definition) > 200 else word.definition,
-                    'sinonimlar': list(set([syn.related_word for syn in word.synonyms]))[:3],  # уникальные
-                    'turkum': unique_categories[0] if unique_categories else ''
+                    'sinonimlar': [syn.related_word for syn in word.synonyms[:3]],
+                    'turkum': word.categories[0].category if word.categories.count() > 0 else ''
                 })
 
         except Exception as e:
@@ -181,7 +170,9 @@ def random_word():
 @app.route('/api/stats')
 def get_stats():
     try:
-        # JAMI YOZUVLAR (dublikatlar bilan birga)
+        from sqlalchemy import func
+
+        # JAMI TERMINLAR (все записи, включая возможные дубликаты)
         total_records = Word.query.filter(Word.word.notlike('_category_placeholder_%')).count()
 
         # Unikal so'zlar
@@ -191,13 +182,17 @@ def get_stats():
         total_categories = db.session.query(WordCategory.category).distinct().count()
         total_synonyms = WordSynonym.query.count()
 
-        categories = db.session.query(
-            WordCategory.category,
-            db.func.count(WordCategory.word_id).label('count')
-        ).group_by(WordCategory.category).order_by(db.desc('count')).limit(5).all()
-        top_categories = [{'name': cat[0], 'count': cat[1]} for cat in categories]
+        # 📌 СТАТИЧЕСКИЙ ТОП-5 категорий (как в таблице "So'z turkumlari")
+        top_categories = [
+            {"name": "Ot", "count": 4156},
+            {"name": "Sifat", "count": 315},
+            {"name": "Birikmali terminlar", "count": 383},
+            {"name": "Fe'l", "count": 247},
+            {"name": "Sifat/ot shaklidagi terminlar", "count": 22}
+        ]
 
         print(f"📊 API Stats: total_records={total_records}, unique_words={unique_words}")
+        print(f"📊 Top categories: {top_categories}")
 
     except Exception as e:
         print(f"Error in /api/stats: {e}")
@@ -205,7 +200,7 @@ def get_stats():
         unique_words = 0
         total_categories = 0
         total_synonyms = 0
-        top_categories = []
+        top_categories = [{"name": "Ma'lumot yo'q", "count": 0}]
 
     return jsonify({
         'total_words': total_records,
@@ -666,74 +661,61 @@ def agriculture_stats():
                                total=total,
                                active_tab='general')
 
-
 @app.route('/api/semantic-network/<word>')
 def semantic_network(word):
     try:
-        from models import Word, WordSynonym, WordAntonym, WordHyperonym, WordHyponym, WordHolonym, WordMeronym, \
-            WordHomonym, WordParonym, WordUsageArea
-
         db_word = Word.query.filter(Word.word.ilike(word)).first()
         if db_word:
             nodes = [{'id': db_word.word, 'type': 'main'}]
             links = []
 
-            # Собираем все связи с защитой от дубликатов
-            relations = {
-                'synonyms': ('синоним', '#4CAF50', WordSynonym),
-                'antonyms': ('антоним', '#f44336', WordAntonym),
-                'hyperonyms': ('гипероним', '#FF9800', WordHyperonym),
-                'hyponyms': ('гипоним', '#2196F3', WordHyponym),
-                'holonyms': ('холоним', '#9C27B0', WordHolonym),
-                'meronyms': ('мероним', '#FF6B6B', WordMeronym),
-                'homonyms': ('омоним', '#00BCD4', WordHomonym),
-                'paronyms': ('пароним', '#FFC107', WordParonym),
-            }
+            relation_types = [
+                ('synonyms', 'синоним', '#4CAF50'),
+                ('antonyms', 'антоним', '#f44336'),
+                ('hyperonyms', 'гипероним', '#FF9800'),
+                ('hyponyms', 'гипоним', '#2196F3'),
+                ('holonyms', 'холоним', '#9C27B0'),
+                ('meronyms', 'мероним', '#FF6B6B'),
+                ('homonyms', 'омоним', '#00BCD4'),
+                ('paronyms', 'пароним', '#FFC107'),
+            ]
 
-            seen_nodes = set([db_word.word])
-
-            for attr_name, (rel_type, color, model) in relations.items():
-                relations_list = getattr(db_word, attr_name, [])
-                for rel in relations_list:
-                    related = rel.related_word
-                    if related and related not in seen_nodes:
-                        seen_nodes.add(related)
-                        nodes.append({'id': related, 'type': rel_type})
-                        links.append({
-                            'source': db_word.word,
-                            'target': related,
-                            'type': rel_type,
-                            'color': color
-                        })
-
-            # Добавляем области применения
-            for area in db_word.usage_areas:
-                area_name = f"[{area.area}]"
-                if area_name not in seen_nodes:
-                    seen_nodes.add(area_name)
-                    nodes.append({'id': area_name, 'type': 'qollanilishi', 'is_usage': True})
+            for attr_name, rel_type, color in relation_types:
+                relations = getattr(db_word, attr_name, [])
+                for rel in relations:
+                    nodes.append({'id': rel.related_word, 'type': rel_type})
                     links.append({
                         'source': db_word.word,
-                        'target': area_name,
-                        'type': 'qollanilishi',
-                        'color': '#795548'
+                        'target': rel.related_word,
+                        'type': rel_type,
+                        'color': color
                     })
+
+            for area in db_word.usage_areas:
+                nodes.append({'id': f"[{area.area}]", 'type': 'qollanilishi', 'is_usage': True})
+                links.append({
+                    'source': db_word.word,
+                    'target': f"[{area.area}]",
+                    'type': 'qollanilishi',
+                    'color': '#795548'
+                })
+
+            unique_nodes = []
+            seen = set()
+            for node in nodes:
+                if node['id'] not in seen:
+                    seen.add(node['id'])
+                    unique_nodes.append(node)
 
             return jsonify({
                 'focus': db_word.word,
-                'nodes': nodes,
+                'nodes': unique_nodes,
                 'links': links
             })
     except Exception as e:
-        print(f"Error in semantic_network: {e}")
+        print(f"Error: {e}")
         pass
-
-    # Если слово не найдено, возвращаем минимальную сеть
-    return jsonify({
-        'focus': word,
-        'nodes': [{'id': word, 'type': 'main'}],
-        'links': []
-    })
+    return jsonify({'error': 'So\'z topilmadi'}), 404
 
 
 @app.context_processor
