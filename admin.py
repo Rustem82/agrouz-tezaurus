@@ -138,64 +138,117 @@ def add_word():
     if request.method == 'POST':
         word_text = request.form.get('word', '').strip().lower()
 
-        # Tekshirish: so'z mavjudmi?
+        # Проверка: пустое слово?
+        if not word_text:
+            flash('So\'z kiritilmagan!', 'danger')
+            return redirect(url_for('admin.add_word'))
+
+        # Tekshirish: so'z mavjudmi? (теперь разрешаем дубликаты, но предупреждаем)
         existing = Word.query.filter_by(word=word_text).first()
         if existing:
-            flash('Bu so\'z allaqachon mavjud', 'danger')
-            return redirect(url_for('admin.add_word'))
+            flash(f'Bu so\'z allaqachon mavjud: "{word_text}"', 'warning')
+            # Не возвращаем, а просто предупреждаем - можно добавить дубликат
 
         # Yangi so'z yaratish
         word = Word(
             word=word_text,
-            definition=request.form.get('definition', ''),
-            etymology=request.form.get('etymology', ''),
-            translation_en=request.form.get('translation_en', '')
+            definition=request.form.get('definition', '').strip(),
+            etymology=request.form.get('etymology', '').strip(),
+            translation_en=request.form.get('translation_en', '').strip()
         )
-        db.session.add(word)
-        db.session.flush()  # ID olish uchun
 
-        # Kategoriyalar - YANGI (без дубликатов)
-        add_unique_categories(word.id, request.form.getlist('categories[]'))
+        # Проверка: есть ли определение?
+        if not word.definition:
+            flash('Ta\'rif kiritilmagan!', 'danger')
+            return redirect(url_for('admin.add_word'))
 
-        # Sinonimlar - YANGI (без дубликатов)
-        for syn in request.form.getlist('synonyms[]'):
-            add_unique_relation(word.id, WordSynonym, syn)
+        try:
+            db.session.add(word)
+            db.session.flush()  # ID olish uchun
 
-        # Antonimlar - YANGI
-        for ant in request.form.getlist('antonyms[]'):
-            add_unique_relation(word.id, WordAntonym, ant)
+            # Kategoriyalar
+            categories = request.form.getlist('categories[]')
+            added_categories = set()
+            for cat in categories:
+                cat = cat.strip()
+                if cat and cat not in added_categories:
+                    added_categories.add(cat)
+                    # Проверяем, существует ли уже такая категория у этого слова
+                    existing_cat = WordCategory.query.filter_by(word_id=word.id, category=cat).first()
+                    if not existing_cat:
+                        db.session.add(WordCategory(word_id=word.id, category=cat))
 
-        # Giperonimlar - YANGI
-        for hyp in request.form.getlist('hyperonyms[]'):
-            add_unique_relation(word.id, WordHyperonym, hyp)
+            # Sinonimlar
+            added_synonyms = set()
+            for syn in request.form.getlist('synonyms[]'):
+                syn = syn.strip()
+                if syn and syn not in added_synonyms:
+                    added_synonyms.add(syn)
+                    existing_syn = WordSynonym.query.filter_by(word_id=word.id, related_word=syn).first()
+                    if not existing_syn:
+                        db.session.add(WordSynonym(word_id=word.id, related_word=syn))
 
-        # Giponimlar - YANGI
-        for hypo in request.form.getlist('hyponyms[]'):
-            add_unique_relation(word.id, WordHyponym, hypo)
+            # Antonimlar
+            added_antonyms = set()
+            for ant in request.form.getlist('antonyms[]'):
+                ant = ant.strip()
+                if ant and ant not in added_antonyms:
+                    added_antonyms.add(ant)
+                    existing_ant = WordAntonym.query.filter_by(word_id=word.id, related_word=ant).first()
+                    if not existing_ant:
+                        db.session.add(WordAntonym(word_id=word.id, related_word=ant))
 
-        # Xolonimlar - YANGI
-        for hol in request.form.getlist('holonyms[]'):
-            add_unique_relation(word.id, WordHolonym, hol)
+            # Giperonimlar
+            for hyp in request.form.getlist('hyperonyms[]'):
+                hyp = hyp.strip()
+                if hyp:
+                    add_unique_relation(word.id, WordHyperonym, hyp)
 
-        # Meronimlar - YANGI
-        for mer in request.form.getlist('meronyms[]'):
-            add_unique_relation(word.id, WordMeronym, mer)
+            # Giponimlar
+            for hypo in request.form.getlist('hyponyms[]'):
+                hypo = hypo.strip()
+                if hypo:
+                    add_unique_relation(word.id, WordHyponym, hypo)
 
-        # Omonimlar - YANGI
-        for hom in request.form.getlist('homonyms[]'):
-            add_unique_relation(word.id, WordHomonym, hom)
+            # Xolonimlar
+            for hol in request.form.getlist('holonyms[]'):
+                hol = hol.strip()
+                if hol:
+                    add_unique_relation(word.id, WordHolonym, hol)
 
-        # Paronimlar - YANGI
-        for par in request.form.getlist('paronyms[]'):
-            add_unique_relation(word.id, WordParonym, par)
+            # Meronimlar
+            for mer in request.form.getlist('meronyms[]'):
+                mer = mer.strip()
+                if mer:
+                    add_unique_relation(word.id, WordMeronym, mer)
 
-        # Qo'llanish sohalari - YANGI
-        for area in request.form.getlist('usage_areas[]'):
-            add_unique_relation(word.id, WordUsageArea, area, 'area')
+            # Omonimlar
+            for hom in request.form.getlist('homonyms[]'):
+                hom = hom.strip()
+                if hom:
+                    add_unique_relation(word.id, WordHomonym, hom)
 
-        db.session.commit()
-        flash(f'So\'z "{word_text}" muvaffaqiyatli qo\'shildi', 'success')
-        return redirect(url_for('admin.words'))
+            # Paronimlar
+            for par in request.form.getlist('paronyms[]'):
+                par = par.strip()
+                if par:
+                    add_unique_relation(word.id, WordParonym, par)
+
+            # Qo'llanish sohalari
+            for area in request.form.getlist('usage_areas[]'):
+                area = area.strip()
+                if area:
+                    add_unique_relation(word.id, WordUsageArea, area, 'area')
+
+            db.session.commit()
+            flash(f'✅ So\'z "{word_text}" muvaffaqiyatli qo\'shildi!', 'success')
+            return redirect(url_for('admin.words'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'❌ Xatolik yuz berdi: {str(e)}', 'danger')
+            print(f"Error adding word: {e}")
+            return redirect(url_for('admin.add_word'))
 
     return render_template('admin/word_form.html')
 

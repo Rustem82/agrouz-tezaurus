@@ -855,13 +855,6 @@
                 </div>
 
                 <div class="stat-item-horizontal">
-                    <div class="stat-icon-horizontal">🔄</div>
-                    <div class="stat-value-horizontal" id="homeSynonymCount">0</div>
-                    <div class="stat-label-horizontal">Sinonimlar</div>
-                    <div class="stat-trend-horizontal" id="synonymTrend">+0%</div>
-                </div>
-
-                <div class="stat-item-horizontal">
                     <div class="stat-icon-horizontal">🏷️</div>
                     <div class="stat-value-horizontal" id="homeCategoryCount">0</div>
                     <div class="stat-label-horizontal">Kategoriyalar</div>
@@ -1016,25 +1009,19 @@
         }, 20);
     }
 
-    // Загрузка статистики (O'ZGARTIRILGAN)
+    // Загрузка статистики
     function loadStats() {
         console.log('🔄 Loading stats...');
 
         fetch('/api/stats')
             .then(response => response.json())
             .then(data => {
-                // Konsolda tekshirish uchun
                 console.log('📊 Stats data:', data);
-                console.log('📚 Total words (with duplicates):', data.total_words);
-                console.log('🔍 Unique words:', data.unique_words);
 
-                // Asosiy hisoblagichlar - ENDI 5136 ko'rinadi!
                 animateValue('homeWordCount', 0, data.total_words, 2000);
-                animateValue('homeSynonymCount', 0, data.total_synonyms, 2000);
                 animateValue('homeCategoryCount', 0, data.total_categories, 2000);
                 animateValue('homeVisitorCount', 0, data.total_visitors || 0, 2000);
 
-                // Обновляем дополнительную статистику
                 const todayVisitors = document.getElementById('todayVisitors');
                 const activeVisitors = document.getElementById('activeVisitors');
                 const totalVisitors = document.getElementById('totalVisitors');
@@ -1043,18 +1030,14 @@
                 if (activeVisitors) activeVisitors.textContent = (data.active_visitors || 0).toLocaleString();
                 if (totalVisitors) totalVisitors.textContent = (data.total_visitors || 0).toLocaleString();
 
-                // Обновляем тренды
                 const visitorGrowth = document.getElementById('visitorGrowth');
                 const wordTrend = document.getElementById('wordTrend');
-                const synonymTrend = document.getElementById('synonymTrend');
                 const categoryTrend = document.getElementById('categoryTrend');
 
                 if (visitorGrowth) visitorGrowth.textContent = `+${data.growth || 0}%`;
                 if (wordTrend) wordTrend.textContent = `+${Math.floor((data.total_words || 0) / 10)}%`;
-                if (synonymTrend) synonymTrend.textContent = `+${Math.floor((data.total_synonyms || 0) / 20)}%`;
                 if (categoryTrend) categoryTrend.textContent = `+${Math.floor((data.total_categories || 0) / 2)}%`;
 
-                // Топ категории в виде чипсов
                 const topCategories = document.getElementById('topCategories');
                 if (topCategories && data.top_categories) {
                     if (data.top_categories.length > 0) {
@@ -1073,7 +1056,6 @@
             })
             .catch(error => {
                 console.error('❌ Error loading stats:', error);
-                // Показываем заглушки при ошибке
                 const homeVisitorCount = document.getElementById('homeVisitorCount');
                 const todayVisitors = document.getElementById('todayVisitors');
                 const activeVisitors = document.getElementById('activeVisitors');
@@ -1086,24 +1068,21 @@
             });
     }
 
-    // Загружать статистику на всех страницах (o'zgartirildi)
     document.addEventListener('DOMContentLoaded', function() {
         console.log('📄 Page loaded:', window.location.pathname);
         loadStats();
     });
 
-    // Обновлять статистику каждую минуту
     let statsInterval = setInterval(() => {
         console.log('🔄 Updating stats...');
         loadStats();
     }, 60000);
 
-    // Cleanup interval when page unloads (optional)
     window.addEventListener('beforeunload', function() {
         if (statsInterval) {
             clearInterval(statsInterval);
         }
     });
-</script>
+    </script>
 </body>
 </html>
