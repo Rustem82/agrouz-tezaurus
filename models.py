@@ -161,3 +161,30 @@ class UserVisit(db.Model):
     first_visit = db.Column(db.DateTime, default=datetime.utcnow)
     last_visit = db.Column(db.DateTime, default=datetime.utcnow)
     visit_count = db.Column(db.Integer, default=1)
+
+# ============================================================
+# МОДЕЛЬ ПОДПИСЧИКА
+# ============================================================
+from datetime import datetime
+
+
+class Subscriber(db.Model):
+    __tablename__ = 'subscribers'
+
+    id            = db.Column(db.Integer, primary_key=True)
+    email         = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    name          = db.Column(db.String(100), nullable=True)
+    subscribed_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    is_active     = db.Column(db.Boolean, default=True, index=True)
+    source        = db.Column(db.String(50), default='website')
+    ip_address    = db.Column(db.String(45), nullable=True)
+
+    def to_dict(self):
+        return {
+            'id':            self.id,
+            'email':         self.email,
+            'name':          self.name,
+            'subscribed_at': self.subscribed_at.isoformat() if self.subscribed_at else None,
+            'is_active':     self.is_active,
+            'source':        self.source,
+        }

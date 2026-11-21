@@ -3,8 +3,10 @@ from flask_login import LoginManager, current_user
 from config import Config
 from models import db, Word, WordCategory, WordSynonym, Visit, UserVisit
 from admin import admin_bp, create_admin
+from models import Subscriber
 from datetime import datetime, timedelta
 import os
+import re
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -37,11 +39,73 @@ with app.app_context():
         print(f"⚠️ Admin creation error: {e}")
 
 
-# Middleware для отслеживания посещений (временно упрощён)
+# ============================================================
+# АВТООПРЕДЕЛЕНИЕ ИМЕНИ DATETIME-ПОЛЯ В МОДЕЛЯХ
+# ============================================================
+def _find_date_field(model, preferred_names):
+    """
+    Возвращает имя первого найденного datetime-поля в модели.
+    Приоритет — по списку preferred_names, иначе — любая колонка с 'datetime'.
+    """
+    for name in preferred_names:
+        if hasattr(model, name):
+            return name
+    for col in model.__table__.columns:
+        if 'datetime' in str(col.type).lower():
+            return col.name
+    return None
+
+
+# ============================================================
+# ОТСЛЕЖИВАНИЕ ПОСЕЩЕНИЙ (с автопоиском полей)
+# ============================================================
 @app.before_request
 def track_visit():
-    """Отслеживание посещений — упрощённая версия без ошибок"""
-    pass  # Временно отключено для стабильности
+    """Отслеживание посещений с автопоиском полей в моделях"""
+    if (request.path.startswith('/static/') or
+            request.path.startswith('/api/') or
+            request.path.startswith('/admin/') or
+            request.path == '/favicon.ico'):
+        return
+
+    try:
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        if ip and ',' in ip:
+            ip = ip.split(',')[0].strip()
+
+        user_agent = request.user_agent.string[:255] if request.user_agent.string else 'Unknown'
+
+        # Автопоиск полей
+        visit_date_field = _find_date_field(Visit, ['timestamp', 'visited_at', 'created_at', 'visit_date', 'date', 'time'])
+        user_last_field = _find_date_field(UserVisit, ['last_visit', 'last_seen', 'updated_at', 'last_activity', 'last_visited'])
+        user_first_field = _find_date_field(UserVisit, ['first_visit', 'created_at', 'registered_at', 'first_seen'])
+
+        # 1. Записываем визит
+        visit_data = {'ip_address': ip, 'user_agent': user_agent}
+        if hasattr(Visit, 'path'):
+            visit_data['path'] = request.path
+        if visit_date_field:
+            visit_data[visit_date_field] = datetime.utcnow()
+
+        db.session.add(Visit(**visit_data))
+
+        # 2. Обновляем/создаём уникального посетителя
+        user_visit = UserVisit.query.filter_by(ip_address=ip).first()
+        if user_visit:
+            if user_last_field:
+                setattr(user_visit, user_last_field, datetime.utcnow())
+        else:
+            user_data = {'ip_address': ip}
+            if user_first_field:
+                user_data[user_first_field] = datetime.utcnow()
+            if user_last_field:
+                user_data[user_last_field] = datetime.utcnow()
+            db.session.add(UserVisit(**user_data))
+
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"⚠️ Ошибка при трекинге визита: {e}")
 
 
 @app.route('/')
@@ -62,13 +126,11 @@ def search():
 
     if query:
         try:
-            # Поиск без дополнительных фильтров
             words = Word.query.filter(
                 Word.word.ilike(f'%{query.lower()}%'),
-                ~Word.word.startswith('_category_placeholder_')  # Только это фильтр
+                ~Word.word.startswith('_category_placeholder_')
             ).all()
 
-            # Сортировка
             def sort_words(word_obj):
                 word_lower = word_obj.word.lower()
                 query_lower = query.lower()
@@ -167,22 +229,19 @@ def random_word():
     return jsonify({'word': None})
 
 
+# ============================================================
+# ОБНОВЛЁННЫЙ API СТАТИСТИКИ (с автопоиском полей)
+# ============================================================
 @app.route('/api/stats')
 def get_stats():
     try:
-        from sqlalchemy import func
-
-        # JAMI TERMINLAR (все записи, включая возможные дубликаты)
+        # === СТАТИСТИКА СЛОВ ===
         total_records = Word.query.filter(Word.word.notlike('_category_placeholder_%')).count()
-
-        # Unikal so'zlar
         unique_words = db.session.query(Word.word).distinct().filter(
             Word.word.notlike('_category_placeholder_%')).count()
-
         total_categories = db.session.query(WordCategory.category).distinct().count()
         total_synonyms = WordSynonym.query.count()
 
-        # 📌 СТАТИЧЕСКИЙ ТОП-5 категорий (как в таблице "So'z turkumlari")
         top_categories = [
             {"name": "Ot", "count": 4156},
             {"name": "Sifat", "count": 315},
@@ -191,15 +250,60 @@ def get_stats():
             {"name": "Sifat/ot shaklidagi terminlar", "count": 22}
         ]
 
-        print(f"📊 API Stats: total_records={total_records}, unique_words={unique_words}")
-        print(f"📊 Top categories: {top_categories}")
+        # === СТАТИСТИКА ПОСЕЩЕНИЙ (автоопределение полей) ===
+        visit_date_field = _find_date_field(Visit, ['timestamp', 'visited_at', 'created_at', 'visit_date', 'date', 'time'])
+        user_last_field = _find_date_field(UserVisit, ['last_visit', 'last_seen', 'updated_at', 'last_activity', 'last_visited'])
+        user_first_field = _find_date_field(UserVisit, ['first_visit', 'created_at', 'registered_at', 'first_seen'])
+
+        # 1. Всего уникальных
+        total_visitors = UserVisit.query.count()
+
+        # 2. Сегодня (уникальные IP)
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        if visit_date_field:
+            today_visitors = db.session.query(Visit.ip_address).filter(
+                getattr(Visit, visit_date_field) >= today_start
+            ).distinct().count()
+        else:
+            today_visitors = 0
+
+        # 3. Активные за 24ч
+        last_24h = datetime.utcnow() - timedelta(hours=24)
+        if user_last_field:
+            active_visitors = UserVisit.query.filter(
+                getattr(UserVisit, user_last_field) >= last_24h
+            ).count()
+        else:
+            active_visitors = 0
+
+        # 4. Рост месяц/месяц
+        first_day_this_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        first_day_last_month = (first_day_this_month - timedelta(days=1)).replace(day=1)
+
+        growth = 0
+        if user_first_field:
+            users_this_month = UserVisit.query.filter(
+                getattr(UserVisit, user_first_field) >= first_day_this_month
+            ).count()
+            users_last_month = UserVisit.query.filter(
+                getattr(UserVisit, user_first_field) >= first_day_last_month,
+                getattr(UserVisit, user_first_field) < first_day_this_month
+            ).count()
+            if users_last_month > 0:
+                growth = round(((users_this_month - users_last_month) / users_last_month) * 100, 1)
+
+        print(f"📊 API Stats: words={total_records}, visitors={total_visitors}, today={today_visitors}, active={active_visitors}")
 
     except Exception as e:
-        print(f"Error in /api/stats: {e}")
+        print(f"❌ Error in /api/stats: {e}")
         total_records = 0
         unique_words = 0
         total_categories = 0
         total_synonyms = 0
+        total_visitors = 0
+        today_visitors = 0
+        active_visitors = 0
+        growth = 0
         top_categories = [{"name": "Ma'lumot yo'q", "count": 0}]
 
     return jsonify({
@@ -207,17 +311,17 @@ def get_stats():
         'unique_words': unique_words,
         'total_categories': total_categories,
         'total_synonyms': total_synonyms,
-        'total_visitors': 0,
-        'today_visitors': 0,
-        'active_visitors': 0,
-        'growth': 0,
+        'total_visitors': total_visitors,
+        'today_visitors': today_visitors,
+        'active_visitors': active_visitors,
+        'growth': growth,
         'top_categories': top_categories
     })
 
 
 @app.route('/stats/agriculture')
 def agriculture_stats():
-    """Statistika sahifasi - 15 ta vkladka: umumiy, dehqonchilik, bog'dorchilik, chorvachilik, so'z turkumlari, termin turlari, giperonim guruhlari, giponim guruhlari, holonim guruhlari, meronim guruhlari, sinonim statistikasi, antonim statistikasi, omonim statistikasi, omonimiya manbalari, paronim statistikasi"""
+    """Statistika sahifasi - 16 ta vkladka"""
     from models import WordUsageArea
 
     tab = request.args.get('tab', 'general')
@@ -322,12 +426,12 @@ def agriculture_stats():
         livestock_sub_industries = {
             "Qoramolchilik": ["қорамол", "сигир", "буқа", "мол", "қорамолчилик", "sigir", "buqa", "g'unajin", "sog'in",
                               "buzoq", "qoramol", "qoramolchilik"],
-            "Qo'ychilik": ["қўй", "қочқор", "қўзи", "жун", "қўйчилик", "qo'y", "qo‘y", "surgich", "qo'zichoq", "teri"],
+            "Qo'ychilik": ["қўй", "қочқор", "қўзи", "жун", "қўйчилик", "qo'y", "qo'‘y", "surgich", "qo'zichoq", "teri"],
             "Parrandachilik": ["товуқ", "парранда", "тухум", "бройлер", "паррандачилик", "tovuq", "jo'ja", "kurka",
                                "o'rdak", "g'oz"],
             "Yilqichilik": ["от", "бия", "тулов", "йилқи", "отчилик", "yilqi", "ot", "toychoq", "quloqin", "noxo'ta"],
             "Echkichilik": ["эчки", "улоқ", "эчкичилик", "echki", "taka", "echkichilik", "echkichi"],
-            "Cho'chqachilik": ["чўчқа", "чўчкачилик", "cho‘chqa", "cho'chqa", "cho'chqachilik", "cho'chqa go'shti"],
+            "Cho'chqachilik": ["чўчқа", "чўчкачилик", "cho'‘chqa", "cho'chqa", "cho'chqachilik", "cho'chqa go'shti"],
             "Ipakchilik (pillachilik)": ["ипак", "пилла", "тут ипак курти", "ипакчилик", "ipak", "pillachilik",
                                          "pillaxona"],
             "Asalarichilik": ["асалари", "ари", "асал", "асаларичилик", "asalari", "asalarichilik", "asal", "ari",
@@ -580,6 +684,49 @@ def agriculture_stats():
                                total=5136,
                                active_tab='paronyms')
 
+    # ========== OBUNACHILAR STATISTIKASI ==========
+    elif tab == 'subscribers':
+        from sqlalchemy import func
+
+        total_subs = Subscriber.query.count()
+        active_subs = Subscriber.query.filter_by(is_active=True).count()
+
+        by_source_rows = (db.session.query(
+            Subscriber.source, func.count(Subscriber.id))
+                          .filter(Subscriber.is_active == True)
+                          .group_by(Subscriber.source)
+                          .order_by(func.count(Subscriber.id).desc())
+                          .all())
+
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        last_30 = Subscriber.query.filter(
+            Subscriber.subscribed_at >= thirty_days_ago
+        ).count()
+
+        first_day = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        this_month = Subscriber.query.filter(
+            Subscriber.subscribed_at >= first_day
+        ).count()
+
+        subscribers_data = {
+            'total': total_subs,
+            'active': active_subs,
+            'inactive': total_subs - active_subs,
+            'last_30': last_30,
+            'this_month': this_month,
+            'by_source': [
+                {'source': s or 'website', 'count': c,
+                 'percent': round(c / active_subs * 100, 1) if active_subs else 0}
+                for s, c in by_source_rows
+            ],
+        }
+
+        return render_template('agriculture_stats.html',
+                               stats=[],
+                               total=active_subs,
+                               active_tab='subscribers',
+                               subscribers=subscribers_data)
+
     # ========== UMUMIY QISHLOQ XO'JALIGI YO'NALISHLARI ==========
     else:
         industries = {
@@ -660,6 +807,7 @@ def agriculture_stats():
                                stats=stats,
                                total=total,
                                active_tab='general')
+
 
 @app.route('/api/semantic-network/<word>')
 def semantic_network(word):
@@ -776,6 +924,92 @@ def numberformat_filter(value):
         return f"{int(value):,}".replace(",", " ")
     except (ValueError, TypeError):
         return value
+
+
+# ============================================================
+# API ПОДПИСКИ
+# ============================================================
+
+@app.route('/api/subscribe', methods=['POST'])
+def api_subscribe():
+    try:
+        data = request.get_json(silent=True) or {}
+        email = (data.get('email') or '').strip().lower()
+        name = (data.get('name') or '').strip()
+
+        if not email or not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+            return jsonify({'success': False, 'error': "Email formati noto'g'ri"}), 400
+
+        existing = Subscriber.query.filter_by(email=email).first()
+
+        if existing:
+            if existing.is_active:
+                return jsonify({'success': False,
+                                'error': "Bu email allaqachon obuna bo'lgan"}), 409
+            existing.is_active = True
+            existing.subscribed_at = datetime.utcnow()
+            db.session.commit()
+            return jsonify({
+                'success': True,
+                'message': "Obuna qayta tiklandi!",
+                'count': Subscriber.query.filter_by(is_active=True).count()
+            })
+
+        sub = Subscriber(
+            email=email,
+            name=name or None,
+            source=data.get('source', 'website'),
+            ip_address=request.remote_addr,
+        )
+        db.session.add(sub)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': "Muvaffaqiyatli obuna bo'ldingiz!",
+            'count': Subscriber.query.filter_by(is_active=True).count()
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/unsubscribe', methods=['POST'])
+def api_unsubscribe():
+    data = request.get_json(silent=True) or {}
+    email = (data.get('email') or '').strip().lower()
+    sub = Subscriber.query.filter_by(email=email, is_active=True).first()
+    if not sub:
+        return jsonify({'success': False, 'error': "Obuna topilmadi"}), 404
+    sub.is_active = False
+    db.session.commit()
+    return jsonify({'success': True, 'message': "Obunadan chiqdingiz"})
+
+
+@app.route('/api/subscribers/count')
+def api_subscribers_count():
+    return jsonify({
+        'active': Subscriber.query.filter_by(is_active=True).count(),
+        'total': Subscriber.query.count(),
+    })
+
+
+@app.route('/api/subscribers')
+def api_subscribers_list():
+    page = request.args.get('page', 1, type=int)
+    per_page = min(request.args.get('per_page', 50, type=int), 200)
+
+    pag = (Subscriber.query
+           .order_by(Subscriber.subscribed_at.desc())
+           .paginate(page=page, per_page=per_page, error_out=False))
+
+    return jsonify({
+        'total': pag.total,
+        'active': Subscriber.query.filter_by(is_active=True).count(),
+        'page': page,
+        'pages': pag.pages,
+        'items': [s.to_dict() for s in pag.items],
+    })
 
 
 if __name__ == '__main__':

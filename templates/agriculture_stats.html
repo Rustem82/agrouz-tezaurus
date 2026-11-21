@@ -6,10 +6,10 @@
 <div class="stats-container">
     <div class="stats-header">
         <h1>📊 Qishloq xo'jaligi statistikasi</h1>
-        <p>Terminlarning sohalar, turkumlar, tarkib, giperonim, giponim, holonim, meronim, sinonim, antonim, omonim, omonimiya manbalari va paronim statistikasi</p>
+        <p>Terminlarning sohalar, turkumlar, tarkib, giperonim, giponim, holonim, meronim, sinonim, antonim, omonim, omonimiya manbalari, paronim va obunachilar statistikasi</p>
     </div>
 
-    <!-- TABS (Vkladkalar) - ENDI 15 TA (4 QATORDA) -->
+    <!-- TABS (Vkladkalar) - ENDI 16 TA (4 QATORDA) -->
     <div class="stats-tabs">
         <!-- 1-QATOR -->
         <div class="tabs-row">
@@ -37,6 +37,7 @@
         <!-- 4-QATOR -->
         <div class="tabs-row fourth-row">
             <a href="{{ url_for('agriculture_stats', tab='paronyms') }}" class="tab {% if active_tab == 'paronyms' %}active{% endif %}">🎤 Paronimlar</a>
+            <a href="{{ url_for('agriculture_stats', tab='subscribers') }}" class="tab tab-subscribers {% if active_tab == 'subscribers' %}active{% endif %}">📬 Obunachilar</a>
         </div>
     </div>
 
@@ -50,6 +51,7 @@
                 {% elif active_tab == 'gardening' %}285
                 {% elif active_tab == 'livestock' %}1 105
                 {% elif active_tab == 'homonym_sources' %}9
+                {% elif active_tab == 'subscribers' %}{% if subscribers %}{{ subscribers.total }}{% else %}0{% endif %}
                 {% elif active_tab == 'paronyms' %}5 136
                 {% else %}5 136{% endif %}
             </span>
@@ -70,6 +72,7 @@
                 {% elif active_tab == 'antonyms' %}Ko'rsatkichlar soni
                 {% elif active_tab == 'homonyms' %}Ko'rsatkichlar soni
                 {% elif active_tab == 'homonym_sources' %}Omonimiya manbalari soni
+                {% elif active_tab == 'subscribers' %}Ko'rsatkichlar soni
                 {% else %}Ko'rsatkichlar soni{% endif %}
             </span>
             <span class="summary-value">
@@ -87,9 +90,16 @@
                 {% elif active_tab == 'antonyms' %}3
                 {% elif active_tab == 'homonyms' %}4
                 {% elif active_tab == 'homonym_sources' %}5
+                {% elif active_tab == 'subscribers' %}{% if subscribers %}{{ 5 + subscribers.by_source|length }}{% else %}5{% endif %}
                 {% else %}4{% endif %}
             </span>
         </div>
+        {% if active_tab == 'subscribers' and subscribers %}
+        <div class="summary-card summary-card-sub">
+            <span class="summary-label">📬 Aktiv obunachilar</span>
+            <span class="summary-value">{{ subscribers.active }}</span>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Jadval -->
@@ -113,6 +123,7 @@
                         {% elif active_tab == 'antonyms' %}Antonim holati
                         {% elif active_tab == 'homonyms' %}Omonimiya holati
                         {% elif active_tab == 'homonym_sources' %}Omonimiya manbai
+                        {% elif active_tab == 'subscribers' %}Obuna turkumi
                         {% else %}Paronimiya holati{% endif %}
                     </th>
                     <th>Terminlar soni (ta)</th>
@@ -207,364 +218,152 @@
                     <tr><td class="rank">7</td><td class="industry-name">📊 Iqtisodiy-tashkiliy va ijtimoiy tushunchalar</td><td class="count">166</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 3.2%"></div><span class="percentage-text">3.2%</span></div></td></tr>
 
                 {% elif active_tab == 'holonyms' %}
-    <!-- ========== 9. HOLONIM GURUHLARI (6 ta) ========== -->
-    <tr>
-        <td class="rank">1</td>
-        <td class="industry-name">🧬 Biologik tizimlar</td>
-        <td class="count">1 457</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 28.4%"></div>
-                <span class="percentage-text">28.4%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">2</td>
-        <td class="industry-name">🌍 Ekologik va tabiiy tizimlar</td>
-        <td class="count">1 032</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 20.1%"></div>
-                <span class="percentage-text">20.1%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">3</td>
-        <td class="industry-name">🌾 Qishloq xo'jaligi va agrar tizimlar</td>
-        <td class="count">1 217</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 23.7%"></div>
-                <span class="percentage-text">23.7%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">4</td>
-        <td class="industry-name">💰 Iqtisodiy va ijtimoiy tizimlar</td>
-        <td class="count">668</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 13.0%"></div>
-                <span class="percentage-text">13.0%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">5</td>
-        <td class="industry-name">🔧 Texnika, texnologiya va ishlab chiqarish tizimlari</td>
-        <td class="count">452</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 8.8%"></div>
-                <span class="percentage-text">8.8%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">6</td>
-        <td class="industry-name">📚 Ilmiy va ta'lim tizimlari</td>
-        <td class="count">310</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 6.0%"></div>
-                <span class="percentage-text">6.0%</span>
-            </div>
-        </td>
-    </tr>
+                    <!-- ========== 9. HOLONIM GURUHLARI (6 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🧬 Biologik tizimlar</td><td class="count">1 457</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 28.4%"></div><span class="percentage-text">28.4%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🌍 Ekologik va tabiiy tizimlar</td><td class="count">1 032</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 20.1%"></div><span class="percentage-text">20.1%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🌾 Qishloq xo'jaligi va agrar tizimlar</td><td class="count">1 217</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 23.7%"></div><span class="percentage-text">23.7%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">💰 Iqtisodiy va ijtimoiy tizimlar</td><td class="count">668</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 13.0%"></div><span class="percentage-text">13.0%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">🔧 Texnika, texnologiya va ishlab chiqarish tizimlari</td><td class="count">452</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 8.8%"></div><span class="percentage-text">8.8%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">📚 Ilmiy va ta'lim tizimlari</td><td class="count">310</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 6.0%"></div><span class="percentage-text">6.0%</span></div></td></tr>
 
                 {% elif active_tab == 'meronyms' %}
-    <!-- ========== 10. MERONIM GURUHLARI (7 ta) ========== -->
-    <tr>
-        <td class="rank">1</td>
-        <td class="industry-name">🧬 Biologik va anatomik qismlar (barg, poya, ildiz, organ, hujayra, to'qima, suyak, mushak va boshqalar)</td>
-        <td class="count">1 829</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 35.6%"></div>
-                <span class="percentage-text">35.6%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">2</td>
-        <td class="industry-name">🌿 O'simlik morfologiyasi va reproduktiv qismlar (gul, meva, urug', danak, po'stloq, shox, kurtak va boshqalar)</td>
-        <td class="count">1 212</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 23.6%"></div>
-                <span class="percentage-text">23.6%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">3</td>
-        <td class="industry-name">🐄 Chorvachilik va hayvon tanasi qismlari (yelin, tuyoq, qanot, tumshuq, teri, jun, ichki a'zolar)</td>
-        <td class="count">729</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 14.2%"></div>
-                <span class="percentage-text">14.2%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">4</td>
-        <td class="industry-name">🌱 Tuproq va tabiiy muhit qatlamlari (tuproq qatlami, gumus, namlik, suv qatlamlari, qum, shag'al)</td>
-        <td class="count">514</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 10.0%"></div>
-                <span class="percentage-text">10.0%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">5</td>
-        <td class="industry-name">🔧 Texnika va mexanik tizim qismlari (mexanizm, detal, val, g'ildirak, filtr, nozul, sensor)</td>
-        <td class="count">457</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 8.9%"></div>
-                <span class="percentage-text">8.9%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">6</td>
-        <td class="industry-name">⚗️ Kimyoviy va biokimyoviy tarkibiy qismlar (molekula, ion, element, gen, DNK, oqsil, ferment)</td>
-        <td class="count">282</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 5.5%"></div>
-                <span class="percentage-text">5.5%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">7</td>
-        <td class="industry-name">📊 Iqtisodiy-tashkiliy qismlar (bo'lim, band, ulush, mablag', hujjat, jarayon bosqichi)</td>
-        <td class="count">113</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 2.2%"></div>
-                <span class="percentage-text">2.2%</span>
-            </div>
-        </td>
-    </tr>
+                    <!-- ========== 10. MERONIM GURUHLARI (7 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🧬 Biologik va anatomik qismlar (barg, poya, ildiz, organ, hujayra, to'qima, suyak, mushak va boshqalar)</td><td class="count">1 829</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 35.6%"></div><span class="percentage-text">35.6%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🌿 O'simlik morfologiyasi va reproduktiv qismlar (gul, meva, urug', danak, po'stloq, shox, kurtak va boshqalar)</td><td class="count">1 212</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 23.6%"></div><span class="percentage-text">23.6%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🐄 Chorvachilik va hayvon tanasi qismlari (yelin, tuyoq, qanot, tumshuq, teri, jun, ichki a'zolar)</td><td class="count">729</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 14.2%"></div><span class="percentage-text">14.2%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">🌱 Tuproq va tabiiy muhit qatlamlari (tuproq qatlami, gumus, namlik, suv qatlamlari, qum, shag'al)</td><td class="count">514</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 10.0%"></div><span class="percentage-text">10.0%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">🔧 Texnika va mexanik tizim qismlari (mexanizm, detal, val, g'ildirak, filtr, nozul, sensor)</td><td class="count">457</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 8.9%"></div><span class="percentage-text">8.9%</span></div></td></tr>
+                    <tr><td class="rank">6</td><td class="industry-name">⚗️ Kimyoviy va biokimyoviy tarkibiy qismlar (molekula, ion, element, gen, DNK, oqsil, ferment)</td><td class="count">282</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 5.5%"></div><span class="percentage-text">5.5%</span></div></td></tr>
+                    <tr><td class="rank">7</td><td class="industry-name">📊 Iqtisodiy-tashkiliy qismlar (bo'lim, band, ulush, mablag', hujjat, jarayon bosqichi)</td><td class="count">113</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 2.2%"></div><span class="percentage-text">2.2%</span></div></td></tr>
+
                 {% elif active_tab == 'synonyms' %}
-    <!-- ========== 11. SINONIM STATISTIKASI (2 ta) ========== -->
-    <tr>
-        <td class="rank">1</td>
-        <td class="industry-name">🔄 Sinonimi mavjud terminlar</td>
-        <td class="count">3 703</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 72.1%"></div>
-                <span class="percentage-text">72.1%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">2</td>
-        <td class="industry-name">❌ Sinonimi berilmagan terminlar</td>
-        <td class="count">1 433</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 27.9%"></div>
-                <span class="percentage-text">27.9%</span>
-            </div>
-        </td>
-    </tr>
+                    <!-- ========== 11. SINONIM STATISTIKASI (2 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🔄 Sinonimi mavjud terminlar</td><td class="count">3 703</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 72.1%"></div><span class="percentage-text">72.1%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">❌ Sinonimi berilmagan terminlar</td><td class="count">1 433</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 27.9%"></div><span class="percentage-text">27.9%</span></div></td></tr>
 
                 {% elif active_tab == 'antonyms' %}
-    <!-- ========== 12. ANTONIM STATISTIKASI (3 ta) ========== -->
-    <tr>
-        <td class="rank">1</td>
-        <td class="industry-name">⚔️ Aniq antonimi mavjud (masalan: normal – buzilgan, madaniy – yovvoyi, sog'lom – kasal)</td>
-        <td class="count">1 324</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 25.8%"></div>
-                <span class="percentage-text">25.8%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">2</td>
-        <td class="industry-name">🔄 Shartli / kontekstual antonim (ma'nosi vaziyatga bog'liq)</td>
-        <td class="count">766</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 14.9%"></div>
-                <span class="percentage-text">14.9%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">3</td>
-        <td class="industry-name">❌ Antonimi berilmagan (—, yo'q)</td>
-        <td class="count">3 046</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 59.3%"></div>
-                <span class="percentage-text">59.3%</span>
-            </div>
-        </td>
-    </tr>
+                    <!-- ========== 12. ANTONIM STATISTIKASI (3 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">⚔️ Aniq antonimi mavjud (masalan: normal – buzilgan, madaniy – yovvoyi, sog'lom – kasal)</td><td class="count">1 324</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 25.8%"></div><span class="percentage-text">25.8%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🔄 Shartli / kontekstual antonim (ma'nosi vaziyatga bog'liq)</td><td class="count">766</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 14.9%"></div><span class="percentage-text">14.9%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">❌ Antonimi berilmagan (—, yo'q)</td><td class="count">3 046</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 59.3%"></div><span class="percentage-text">59.3%</span></div></td></tr>
 
                 {% elif active_tab == 'homonyms' %}
-    <!-- ========== 13. OMONIM STATISTIKASI (4 ta) ========== -->
-    <tr>
-        <td class="rank">1</td>
-        <td class="industry-name">🔤 Aniq omonim mavjud (bir xil shakl – semantik jihatdan bog'liq bo'lmagan turli ma'nolar)</td>
-        <td class="count">9</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 0.2%"></div>
-                <span class="percentage-text">0.2%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">2</td>
-        <td class="industry-name">🌐 Fanlararo omonim</td>
-        <td class="count">0</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 0.0%"></div>
-                <span class="percentage-text">0.0%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">3</td>
-        <td class="industry-name">📖 Polisemiya (ko'p ma'nolilik), lekin omonim emas</td>
-        <td class="count">0</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 0.0%"></div>
-                <span class="percentage-text">0.0%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">4</td>
-        <td class="industry-name">❌ Omonimi mavjud emas</td>
-        <td class="count">5 127</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 99.8%"></div>
-                <span class="percentage-text">99.8%</span>
-            </div>
-        </td>
-    </tr>
+                    <!-- ========== 13. OMONIM STATISTIKASI (4 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🔤 Aniq omonim mavjud (bir xil shakl – semantik jihatdan bog'liq bo'lmagan turli ma'nolar)</td><td class="count">9</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.2%"></div><span class="percentage-text">0.2%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🌐 Fanlararo omonim</td><td class="count">0</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div><span class="percentage-text">0.0%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">📖 Polisemiya (ko'p ma'nolilik), lekin omonim emas</td><td class="count">0</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div><span class="percentage-text">0.0%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">❌ Omonimi mavjud emas</td><td class="count">5 127</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 99.8%"></div><span class="percentage-text">99.8%</span></div></td></tr>
+
                 {% elif active_tab == 'homonym_sources' %}
-    <!-- ========== 14. OMONIMIYA MANBALARI (5 ta) ========== -->
-    <tr>
-        <td class="rank">1</td>
-        <td class="industry-name">📖 Umumiy til ma'nosi ↔ terminologik ma'no o'rtasidagi omonimiya</td>
-        <td class="count">4</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 44.4%"></div>
-                <span class="percentage-text">44.4%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">2</td>
-        <td class="industry-name">🔬 Fanlararo omonimiya (biologiya, iqtisod, texnika va boshqa sohalar)</td>
-        <td class="count">1</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 11.1%"></div>
-                <span class="percentage-text">11.1%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">3</td>
-        <td class="industry-name">🎭 Ko'chma yoki badiiy (metaforik, metonimik) ma'no asosida shakllangan omonimiya</td>
-        <td class="count">2</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 22.2%"></div>
-                <span class="percentage-text">22.2%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">4</td>
-        <td class="industry-name">🏷️ Atama va nomlar to'qnashuvi (zoonim, fitonim va boshqalar)</td>
-        <td class="count">2</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 22.2%"></div>
-                <span class="percentage-text">22.2%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">5</td>
-        <td class="industry-name">📌 Boshqa holatlar</td>
-        <td class="count">0</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 0.0%"></div>
-                <span class="percentage-text">0.0%</span>
-            </div>
-        </td>
-    </tr>
+                    <!-- ========== 14. OMONIMIYA MANBALARI (5 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">📖 Umumiy til ma'nosi ↔ terminologik ma'no o'rtasidagi omonimiya</td><td class="count">4</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 44.4%"></div><span class="percentage-text">44.4%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🔬 Fanlararo omonimiya (biologiya, iqtisod, texnika va boshqa sohalar)</td><td class="count">1</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 11.1%"></div><span class="percentage-text">11.1%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🎭 Ko'chma yoki badiiy (metaforik, metonimik) ma'no asosida shakllangan omonimiya</td><td class="count">2</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 22.2%"></div><span class="percentage-text">22.2%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">🏷️ Atama va nomlar to'qnashuvi (zoonim, fitonim va boshqalar)</td><td class="count">2</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 22.2%"></div><span class="percentage-text">22.2%</span></div></td></tr>
+                    <tr><td class="rank">5</td><td class="industry-name">📌 Boshqa holatlar</td><td class="count">0</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div><span class="percentage-text">0.0%</span></div></td></tr>
 
                 {% elif active_tab == 'paronyms' %}
-    <!-- ========== 15. PARONIM STATISTIKASI (4 ta) ========== -->
-    <tr>
-        <td class="rank">1</td>
-        <td class="industry-name">🎯 Aniq paronim juftligi mavjud (ma'nosi farq qiluvchi, lekin talaffuzi yaqin mustaqil terminlar)</td>
-        <td class="count">52</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 1.0%"></div>
-                <span class="percentage-text">1.0%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">2</td>
-        <td class="industry-name">🔊 Fonetik-grafik yaqin paronimlar (imlo, talaffuz yoki transliteratsiya farqi bilan)</td>
-        <td class="count">16</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 0.3%"></div>
-                <span class="percentage-text">0.3%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">3</td>
-        <td class="industry-name">🌐 Fanlararo paronimiya (turli fan sohalarida qo'llanuvchi, shaklan yaqin terminlar)</td>
-        <td class="count">4</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 0.1%"></div>
-                <span class="percentage-text">0.1%</span>
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <td class="rank">4</td>
-        <td class="industry-name">❌ Paronimi mavjud emas</td>
-        <td class="count">5 064</td>
-        <td class="percentage">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 98.6%"></div>
-                <span class="percentage-text">98.6%</span>
-            </div>
-        </td>
-    </tr>
+                    <!-- ========== 15. PARONIM STATISTIKASI (4 ta) ========== -->
+                    <tr><td class="rank">1</td><td class="industry-name">🎯 Aniq paronim juftligi mavjud (ma'nosi farq qiluvchi, lekin talaffuzi yaqin mustaqil terminlar)</td><td class="count">52</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 1.0%"></div><span class="percentage-text">1.0%</span></div></td></tr>
+                    <tr><td class="rank">2</td><td class="industry-name">🔊 Fonetik-grafik yaqin paronimlar (imlo, talaffuz yoki transliteratsiya farqi bilan)</td><td class="count">16</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.3%"></div><span class="percentage-text">0.3%</span></div></td></tr>
+                    <tr><td class="rank">3</td><td class="industry-name">🌐 Fanlararo paronimiya (turli fan sohalarida qo'llanuvchi, shaklan yaqin terminlar)</td><td class="count">4</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 0.1%"></div><span class="percentage-text">0.1%</span></div></td></tr>
+                    <tr><td class="rank">4</td><td class="industry-name">❌ Paronimi mavjud emas</td><td class="count">5 064</td><td class="percentage"><div class="progress-bar"><div class="progress-fill" style="width: 98.6%"></div><span class="percentage-text">98.6%</span></div></td></tr>
+
+                {% elif active_tab == 'subscribers' and subscribers %}
+                    <!-- ========== 16. OBUNACHILAR STATISTIKASI ========== -->
+                    <tr>
+                        <td class="rank">Σ</td>
+                        <td class="industry-name">📬 Jami obunachilar</td>
+                        <td class="count">{{ subscribers.total }}</td>
+                        <td class="percentage">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%"></div>
+                                <span class="percentage-text">100%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">✓</td>
+                        <td class="industry-name">✅ Aktiv obunachilar</td>
+                        <td class="count">{{ subscribers.active }}</td>
+                        <td class="percentage">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ (subscribers.active / subscribers.total * 100) if subscribers.total else 0 }}%"></div>
+                                <span class="percentage-text">{{ (subscribers.active / subscribers.total * 100)|round(1) if subscribers.total else 0 }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">✗</td>
+                        <td class="industry-name">❌ Nofaol (obunadan chiqqan)</td>
+                        <td class="count">{{ subscribers.inactive }}</td>
+                        <td class="percentage">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ (subscribers.inactive / subscribers.total * 100) if subscribers.total else 0 }}%; background: #ef4444;"></div>
+                                <span class="percentage-text">{{ (subscribers.inactive / subscribers.total * 100)|round(1) if subscribers.total else 0 }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">📅</td>
+                        <td class="industry-name">🆕 Oxirgi 30 kunda qo'shilganlar</td>
+                        <td class="count">{{ subscribers.last_30 }}</td>
+                        <td class="percentage">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ (subscribers.last_30 / subscribers.active * 100) if subscribers.active else 0 }}%"></div>
+                                <span class="percentage-text">{{ (subscribers.last_30 / subscribers.active * 100)|round(1) if subscribers.active else 0 }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">🗓️</td>
+                        <td class="industry-name">📈 Shu oy qo'shilganlar</td>
+                        <td class="count">{{ subscribers.this_month }}</td>
+                        <td class="percentage">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ (subscribers.this_month / subscribers.active * 100) if subscribers.active else 0 }}%"></div>
+                                <span class="percentage-text">{{ (subscribers.this_month / subscribers.active * 100)|round(1) if subscribers.active else 0 }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ─── Manba bo'yicha ─── #}
+                    {% for row in subscribers.by_source %}
+                    <tr>
+                        <td class="rank">{{ loop.index }}</td>
+                        <td class="industry-name">
+                            {% if row.source == 'navbar' %}🔝 Navbar
+                            {% elif row.source == 'stats_page' %}📊 Statistika sahifasi
+                            {% elif row.source == 'hero' %}🎯 Bosh sahifa
+                            {% else %}🌐 {{ row.source }}
+                            {% endif %}
+                        </td>
+                        <td class="count">{{ row.count }}</td>
+                        <td class="percentage">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ row.percent }}%"></div>
+                                <span class="percentage-text">{{ row.percent }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    {# ─── CTA ─── #}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 1.5rem;">
+                            <button type="button" class="sub-submit-btn sub-cta"
+                                    onclick="openSubscribeModal('stats_page')">
+                                📬 Obuna bo'lish
+                            </button>
+                        </td>
+                    </tr>
+
+                {% elif active_tab == 'subscribers' and not subscribers %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: #999;">
+                            ⚠️ Obunachilar ma'lumotlari yuklanmadi
+                        </td>
+                    </tr>
                 {% endif %}
             </tbody>
             <tfoot>
@@ -576,6 +375,7 @@
                         {% elif active_tab == 'gardening' %}285
                         {% elif active_tab == 'livestock' %}1 105
                         {% elif active_tab == 'homonym_sources' %}9
+                        {% elif active_tab == 'subscribers' %}{% if subscribers %}{{ subscribers.total }}{% else %}0{% endif %}
                         {% else %}5 136{% endif %}
                     </strong></td>
                     <td class="percentage"><strong>100.0%</strong></td>
@@ -586,7 +386,7 @@
 
     <!-- Izoh -->
     <div class="stats-note">
-        <p>📌 <strong>Izoh:</strong> Statistik ma'lumotlar qishloq xo'jaligi terminlari asosida tayyorlangan.</p>
+        <p>📌 <strong>Izoh:</strong> Statistik ma'lumotlar qishloq xo'jaligi terminlari va sayt obunachilari asosida tayyorlangan.</p>
     </div>
 </div>
 
@@ -600,10 +400,38 @@
 .tab { padding: 0.35rem 0.7rem; background: transparent; color: #666; text-decoration: none; border-radius: 30px; font-weight: 600; transition: all 0.3s; display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.7rem; }
 .tab:hover { background: #f0f4ff; color: #667eea; }
 .tab.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102,126,234,0.3); }
-.stats-summary { display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; }
-.summary-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 15px; text-align: center; }
+
+/* ═══════════ SUBSCRIBERS TAB ═══════════ */
+.tab-subscribers {
+    background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(124,58,237,0.15));
+    border: 1px solid rgba(124,58,237,0.35);
+    color: #7c3aed;
+    font-weight: 600;
+}
+.tab-subscribers:hover {
+    background: linear-gradient(135deg, rgba(167,139,250,0.25), rgba(124,58,237,0.25));
+    color: #6d28d9;
+}
+.tab-subscribers.active {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.4);
+}
+
+.stats-summary { display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.summary-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 15px; text-align: center; min-width: 160px; }
 .summary-label { display: block; font-size: 0.9rem; opacity: 0.9; }
 .summary-value { display: block; font-size: 2rem; font-weight: 700; }
+
+.summary-card-sub {
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    color: #7c3aed;
+    border: 1px solid #c4b5fd;
+}
+.summary-card-sub .summary-label { color: #6d28d9; opacity: 1; }
+.summary-card-sub .summary-value { color: #7c3aed; }
+
 .stats-table-wrapper { overflow-x: auto; }
 .stats-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
 .stats-table th { background: #f8f9ff; padding: 0.6rem; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #667eea; }
@@ -619,9 +447,34 @@
 .total-row { background: #f0f4ff; font-weight: 600; }
 .total-row td { border-top: 2px solid #667eea; border-bottom: none; }
 .stats-note { margin-top: 1.5rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; font-size: 0.85rem; color: #78350f; }
+
+/* CTA button in table */
+.sub-cta {
+    max-width: 320px;
+    margin: 0 auto;
+    display: block;
+    width: 100%;
+    padding: 0.85rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+.sub-cta:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(102,126,234,0.35);
+}
+
 @media (max-width: 768px) {
     .stats-container { padding: 1rem; }
-    .stats-summary { flex-direction: column; gap: 1rem; }
+    .stats-summary { flex-direction: column; gap: 1rem; align-items: stretch; }
+    .summary-card { padding: 0.8rem 1rem; }
     .tabs-row { flex-direction: column; align-items: stretch; gap: 0.3rem; }
     .tab { text-align: center; justify-content: center; }
     .percentage { width: 110px; }

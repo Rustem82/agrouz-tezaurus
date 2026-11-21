@@ -287,6 +287,50 @@
         padding-left: 1.5rem;
     }
 
+    /* ===== SUBSCRIBE BUTTON (NEW) ===== */
+    .nav-subscribe-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #a78bfa, #7c3aed);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-family: 'Sora', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s;
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+        white-space: nowrap;
+        height: 38px;
+    }
+
+    .nav-subscribe-btn svg {
+        flex-shrink: 0;
+    }
+
+    .nav-subscribe-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 28px rgba(124, 58, 237, 0.65);
+        filter: brightness(1.1);
+    }
+
+    .nav-sub-count {
+        background: rgba(255, 255, 255, 0.28);
+        padding: 0.08rem 0.5rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        min-width: 8px;
+        text-align: center;
+    }
+
+    .nav-sub-count:empty {
+        display: none;
+    }
+
     /* Theme Button */
     .theme-btn {
         width: 38px;
@@ -346,6 +390,147 @@
 
     .nav-toggle:hover span {
         background: white;
+    }
+
+    /* ===== SUBSCRIBE MODAL (NEW) ===== */
+    .sub-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 8, 30, 0.75);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 20000;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .sub-modal.show {
+        display: flex;
+    }
+
+    .sub-modal-content {
+        background: white;
+        border-radius: 20px;
+        max-width: 440px;
+        width: 100%;
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+        animation: subSlideUp 0.3s ease;
+    }
+
+    .sub-modal-header {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 1.1rem 1.4rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .sub-modal-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-family: 'Sora', sans-serif;
+    }
+
+    .sub-modal-close {
+        font-size: 1.8rem;
+        cursor: pointer;
+        line-height: 1;
+        opacity: 0.85;
+        transition: transform 0.2s;
+    }
+
+    .sub-modal-close:hover {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    .sub-modal-body {
+        padding: 1.5rem;
+    }
+
+    .sub-modal-desc {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1.2rem;
+        line-height: 1.5;
+        font-family: 'Sora', sans-serif;
+    }
+
+    .sub-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        font-family: 'Sora', sans-serif;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .sub-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+
+    .sub-submit-btn {
+        width: 100%;
+        padding: 0.85rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-family: 'Sora', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s;
+    }
+
+    .sub-submit-btn:hover {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
+    }
+
+    .sub-submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .sub-message {
+        text-align: center;
+        font-size: 0.85rem;
+        margin-top: 0.7rem;
+        min-height: 1.2em;
+        font-family: 'Sora', sans-serif;
+    }
+
+    .sub-message.success { color: #16a34a; }
+    .sub-message.error   { color: #dc2626; }
+
+    .sub-stats-line {
+        text-align: center;
+        font-size: 0.78rem;
+        color: #999;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px dashed #e5e7eb;
+        font-family: 'Sora', sans-serif;
+    }
+
+    .sub-stats-line span {
+        color: #667eea;
+        font-weight: 700;
+    }
+
+    @keyframes subSlideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
     }
 
     /* ===== MAIN CONTENT ===== */
@@ -716,6 +901,19 @@
             display: flex;
         }
 
+        /* Компактная кнопка подписки на мобильных */
+        .nav-subscribe-btn {
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        .nav-subscribe-btn > span {
+            display: none;
+        }
+
         .logo-title {
             font-size: 1rem;
         }
@@ -817,6 +1015,17 @@
                         <div class="suggestions-box" id="suggestionsBox"></div>
                     </form>
                 </div>
+
+                <!-- ═══════════ SUBSCRIBE BUTTON ═══════════ -->
+                <button class="nav-subscribe-btn" id="subscribeBtn" onclick="openSubscribeModal('navbar')" title="Yangiliklarga obuna bo'lish">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <span>Obuna</span>
+                    <span class="nav-sub-count" id="navSubCount"></span>
+                </button>
 
                 <button class="theme-btn" id="themeBtn" title="Dizayn sozlamalari">
                     <svg viewBox="0 0 24 24">
@@ -928,6 +1137,31 @@
             <p>&copy; 2026 Tezaurus. Barcha huquqlar himoyalangan.</p>
         </div>
     </footer>
+
+    <!-- ═══════════ SUBSCRIBE MODAL ═══════════ -->
+    <div id="subscribeModal" class="sub-modal">
+        <div class="sub-modal-content">
+            <div class="sub-modal-header">
+                <h3>📬 Yangiliklarga obuna bo'ling</h3>
+                <span class="sub-modal-close" onclick="closeSubscribeModal()">&times;</span>
+            </div>
+            <div class="sub-modal-body">
+                <p class="sub-modal-desc">
+                    Yangi terminlar, yangilanishlar va lug'at bo'yicha xabarnomalarni
+                    birinchilardan bo'lib oling.
+                </p>
+                <form id="subscribeForm" onsubmit="submitSubscribe(event)">
+                    <input type="text" id="subName" placeholder="Ismingiz (ixtiyoriy)" class="sub-input">
+                    <input type="email" id="subEmail" placeholder="Email manzilingiz" class="sub-input" required>
+                    <button type="submit" class="sub-submit-btn" id="subSubmitBtn">Obuna bo'lish</button>
+                </form>
+                <div id="subMessage" class="sub-message"></div>
+                <div class="sub-stats-line">
+                    <span id="subModalCount">—</span> kishi allaqachon obuna bo'lgan
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
     // Scroll effect
@@ -1068,9 +1302,97 @@
             });
     }
 
+    // ═══════════════ SUBSCRIBE LOGIC ═══════════════
+    function refreshSubCount() {
+        fetch('/api/subscribers/count')
+            .then(r => r.json())
+            .then(d => {
+                const el = document.getElementById('navSubCount');
+                if (el) el.textContent = d.active > 0 ? d.active : '';
+                const modalEl = document.getElementById('subModalCount');
+                if (modalEl) modalEl.textContent = d.active;
+            })
+            .catch(() => {});
+    }
+
+    function openSubscribeModal(source = 'website') {
+        const modal = document.getElementById('subscribeModal');
+        if (!modal) return;
+        modal.classList.add('show');
+        modal.dataset.source = source;
+        document.getElementById('subMessage').textContent = '';
+        refreshSubCount();
+    }
+
+    function closeSubscribeModal() {
+        const modal = document.getElementById('subscribeModal');
+        if (!modal) return;
+        modal.classList.remove('show');
+        const form = document.getElementById('subscribeForm');
+        if (form) form.reset();
+        const msg = document.getElementById('subMessage');
+        if (msg) { msg.textContent = ''; msg.className = 'sub-message'; }
+    }
+
+    function submitSubscribe(e) {
+        e.preventDefault();
+        const email  = document.getElementById('subEmail').value.trim();
+        const name   = document.getElementById('subName').value.trim();
+        const btn    = document.getElementById('subSubmitBtn');
+        const msg    = document.getElementById('subMessage');
+        const source = document.getElementById('subscribeModal').dataset.source || 'website';
+
+        if (!email) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Yuborilmoqda...';
+        msg.textContent = '';
+        msg.className = 'sub-message';
+
+        fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, name, source })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                msg.textContent = '✅ ' + d.message;
+                msg.className = 'sub-message success';
+                document.getElementById('subscribeForm').reset();
+                refreshSubCount();
+                setTimeout(closeSubscribeModal, 2200);
+            } else {
+                msg.textContent = '⚠️ ' + (d.error || 'Xatolik yuz berdi');
+                msg.className = 'sub-message error';
+            }
+        })
+        .catch(() => {
+            msg.textContent = '❌ Tarmoq xatosi';
+            msg.className = 'sub-message error';
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = "Obuna bo'lish";
+        });
+    }
+
+    // Клик вне модалки — закрыть
+    document.addEventListener('click', function(e) {
+        const m = document.getElementById('subscribeModal');
+        if (m && e.target === m) closeSubscribeModal();
+    });
+
+    // Закрытие модалки по ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeSubscribeModal();
+    });
+
+    // ═══════════════ INIT ═══════════════
     document.addEventListener('DOMContentLoaded', function() {
         console.log('📄 Page loaded:', window.location.pathname);
         loadStats();
+        refreshSubCount();   // подгружаем счётчик подписчиков в navbar
     });
 
     let statsInterval = setInterval(() => {
